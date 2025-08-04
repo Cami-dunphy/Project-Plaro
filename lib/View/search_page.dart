@@ -4,6 +4,9 @@ import '../../../Model/user_profile.dart';
 import 'widgets/Profile_card.dart';
 import '../ViewModel/search_provider.dart';
 import '../View/profile.dart';
+import 'package:plaro_3/View/profile.dart';
+
+
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 

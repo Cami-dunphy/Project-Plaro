@@ -12,6 +12,7 @@ import '../Model/toast.dart';
 import '../Model/post.dart';
 import '../Model/user_profile.dart';
 import '../View/foll_page.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class OtherProfileScreen extends ConsumerStatefulWidget {
   final String? userId; // null = current user, otherwise other user
@@ -224,12 +225,11 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
         const SizedBox(height: 30),
         Row(
           children: [
-            // Back button for all profiles
             IconButton(
               onPressed: () => Navigator.pop(context),
               icon: Icon(
-                Icons.arrow_back_ios_new,
-                color: Colors.blue[400],
+                Icons.arrow_back,
+                color: Colors.white,
                 size: 20,
               ),
             ),
@@ -239,10 +239,18 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
               child: profileState.when(
                 data: (profile) => Text(
                   profile?.username ?? widget.initialUserData?.username ?? 'Unknown User',
-                  style: const TextStyle(
+                  style: GoogleFonts.playwriteFrModerne( // change googlefont in playwriteseries
                     color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 8,
+                        color: Colors.blue,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -598,8 +606,8 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
   Widget _buildTabBar(ProfileFeedState feedState) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.black,
+
       ),
       child: TabBar(
         controller: _tabController,
@@ -608,7 +616,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
             width: 1.5,
             color: Colors.blue[400]!,
           ),
-          insets: const EdgeInsets.symmetric(horizontal: 80.0),
+          insets: const EdgeInsets.symmetric(horizontal: 90.0),//underline change in phn , also scrolling seems dif in phn not like lap,,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.blue,
@@ -921,6 +929,7 @@ class ProfilePostsGrid extends ConsumerWidget {
                 ),
               ),
             ),
+
           SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,

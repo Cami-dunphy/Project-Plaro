@@ -244,7 +244,7 @@ class _FollowPageState extends ConsumerState<FollowPage>
 
     if (followState.error != null && followState.followers.isEmpty) {
       return Center(
-        child: Column(
+        child: Column( 
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(

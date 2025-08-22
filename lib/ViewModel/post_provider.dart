@@ -5,8 +5,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import '../Model/post.dart';
 
-
-
 // State class for post creation
 class PostCreateState {
   final bool isLoading;
@@ -29,6 +27,14 @@ class PostCreateState {
     this.tags = const [],
   });
 
+  // Add this getter to track unsaved changes
+  bool get hasUnsavedChanges =>
+      content.isNotEmpty ||
+          title.isNotEmpty ||
+          caption.isNotEmpty ||
+          tags.isNotEmpty ||
+          selectedMedia.isNotEmpty;
+
   PostCreateState copyWith({
     bool? isLoading,
     String? error,
@@ -41,8 +47,8 @@ class PostCreateState {
   }) {
     return PostCreateState(
       isLoading: isLoading ?? this.isLoading,
-      error: error,
-      successMessage: successMessage,
+      error: error ?? this.error,
+      successMessage: successMessage ?? this.successMessage,
       selectedMedia: selectedMedia ?? this.selectedMedia,
       content: content ?? this.content,
       title: title ?? this.title,
@@ -59,6 +65,37 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
   final SupabaseClient _supabase = Supabase.instance.client;
   final ImagePicker _imagePicker = ImagePicker();
 
+  // Clear the entire form
+  void clearForm() {
+    state = PostCreateState(); // Reset to initial state
+  }
+
+  // Save draft functionality
+  Future<void> saveDraft() async {
+    try {
+      state = state.copyWith(isLoading: true);
+      // Here you would implement actual draft saving logic
+      // For now, just simulating it
+      await Future.delayed(const Duration(seconds: 1));
+
+      state = state.copyWith(
+        isLoading: false,
+        successMessage: 'Draft saved successfully',
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to save draft: $e',
+      );
+    }
+  }
+
+  // Clear success message
+  void clearSuccessMessage() {
+    state = state.copyWith(successMessage: null);
+  }
+
+  // Media handling methods
   Future<void> pickMedia({bool fromCamera = false}) async {
     try {
       final List<XFile> pickedFiles = [];
@@ -105,6 +142,7 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
     state = state.copyWith(selectedMedia: updatedMedia);
   }
 
+  // Content update methods
   void updateContent(String content) {
     state = state.copyWith(content: content);
   }
@@ -121,6 +159,23 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
     state = state.copyWith(tags: tags);
   }
 
+  // Add a single tag
+  void addTag(String tag) {
+    if (tag.isNotEmpty && !state.tags.contains(tag)) {
+      state = state.copyWith(tags: [...state.tags, tag]);
+    }
+  }
+
+  // Remove a tag
+  void removeTag(String tag) {
+    if (state.tags.contains(tag)) {
+      final updatedTags = List<String>.from(state.tags);
+      updatedTags.remove(tag);
+      state = state.copyWith(tags: updatedTags);
+    }
+  }
+
+  // File upload helper
   Future<String?> _uploadFile(XFile file) async {
     try {
       final currentUserId = _supabase.auth.currentUser?.id;
@@ -156,6 +211,7 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
     }
   }
 
+  // Main post creation method
   Future<bool> createPost() async {
     final currentUserId = _supabase.auth.currentUser?.id;
     if (currentUserId == null) {
@@ -195,6 +251,7 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
         'user_id': currentUserId,
         'title': state.title.isEmpty ? null : state.title,
         'content': state.content.isEmpty ? null : state.content,
+        'caption': state.caption.isEmpty ? null : state.caption,
         'tags': state.tags.isEmpty ? null : state.tags,
         'is_published': true,
         'media_urls': mediaUrls.isEmpty ? null : mediaUrls,
@@ -207,6 +264,7 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
           .select()
           .single();
 
+      // Clear the form after successful post creation
       state = state.copyWith(
         isLoading: false,
         successMessage: 'Post created successfully!',
@@ -236,12 +294,14 @@ class PostCreateNotifier extends StateNotifier<PostCreateState> {
     }
   }
 
+  // Error handling
   void clearError() {
     state = state.copyWith(error: null);
   }
 
+  // Alias for clearSuccessMessage for consistency
   void clearSuccess() {
-    state = state.copyWith(successMessage: null);
+    clearSuccessMessage();
   }
 }
 

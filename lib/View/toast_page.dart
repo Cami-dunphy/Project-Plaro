@@ -1,4 +1,4 @@
-// Updated toast_page.dart
+// toast_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../ViewModel/textpost_provider.dart';
@@ -20,7 +20,6 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
   void initState() {
     super.initState();
 
-    // Listen to controller changes to update state
     _titleController.addListener(() {
       ref.read(textPostProvider.notifier).updateTitle(_titleController.text);
     });
@@ -28,7 +27,6 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
     _contentController.addListener(() {
       ref.read(textPostProvider.notifier).updateContent(_contentController.text);
     });
-
   }
 
   @override
@@ -109,7 +107,7 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
               Navigator.of(context).pop();
             },
             child: const Text('Discard', style: TextStyle(color: Colors.red)),
-          ),
+            ),
         ],
       ),
     );
@@ -118,9 +116,8 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
   @override
   Widget build(BuildContext context) {
     final textPostState = ref.watch(textPostProvider);
-    final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
-    final isTablet = screenWidth > 600;
+    final isTablet = screenWidth >600;
 
     ref.listen<TextPostState>(textPostProvider, (previous, next) {
       if (next.successMessage != null) {
@@ -132,7 +129,6 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
         });
       }
     });
-
 
     return PopScope(
       canPop: !textPostState.hasUnsavedChanges,
@@ -178,23 +174,26 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                   ),
                 ),
               ),
-            TextButton(
-              onPressed: textPostState.isLoading
-                  ? null
-                  : () => ref.read(textPostProvider.notifier).publishPost(),
-              child: Text(
-                'Post',
-                style: TextStyle(
-                  color: textPostState.isLoading ? Colors.grey : Colors.blue,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
           ],
         ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: textPostState.isLoading
+              ? null
+              : () => ref.read(textPostProvider.notifier).publishPost(),
+          backgroundColor: Colors.blue,
+          icon: const Icon(Icons.send_sharp, size: 20, color: Colors.white),
+          label: const Text(
+            'Post',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+
         body: Column(
           children: [
-            // Error message
+            // Error
             if (textPostState.error != null)
               Container(
                 width: double.infinity,
@@ -218,7 +217,7 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                 ),
               ),
 
-            // Shows Success Message
+            // Success
             if (textPostState.successMessage != null)
               Container(
                 width: double.infinity,
@@ -242,9 +241,7 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                 ),
               ),
 
-
-
-            // Loading indicator
+            // Loader
             if (textPostState.isLoading)
               const LinearProgressIndicator(
                 backgroundColor: Colors.grey,
@@ -259,68 +256,70 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title field
-                    TextField(
-                      controller: _titleController,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isTablet ? 24 : 20,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: 'Enter your title here...',
-                        hintStyle: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: isTablet ? 24 : 20,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      maxLines: null,
-                      textInputAction: TextInputAction.next,
-                    ),
-
-                    // Divider
+                    // Title
                     Container(
-                      height: 1,
-                      color: Colors.grey[800],
-                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue),
+                      ),
+                      child: TextField(
+                        controller: _titleController,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isTablet ? 20 : 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter your title here...',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.next,
+                      ),
                     ),
 
-                    // Content field
-                    TextField(
-                      controller: _contentController,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: isTablet ? 18 : 16,
-                        height: 1.5,
+                    const SizedBox(height: 16),
+
+                    // Content
+                    Container(
+                      height: 250,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue),
                       ),
-                      decoration: InputDecoration(
-                        hintText: 'Write your post content here...\n\nYou can write multiple paragraphs, share your thoughts, ask questions, or start a discussion.',
-                        hintStyle: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: isTablet ? 18 : 16,
-                          height: 1.5,
+                      child: Scrollbar( // scrollbar indicator
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          child: TextField(
+                            controller: _contentController,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 18 : 16,
+                              height: 1.5,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Write your post content here...',
+                              hintStyle: TextStyle(color: Colors.grey),
+                              border: InputBorder.none,
+                            ),
+                            maxLines: null, // Let it grow inside scroll
+                            keyboardType: TextInputType.multiline,
+                          ),
                         ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      maxLines: null,
-                      minLines: 10,
-                      textInputAction: TextInputAction.newline,
                     ),
 
                     const SizedBox(height: 24),
 
-                    // Tags section
+                    // Tags Section
                     Row(
                       children: [
-                        Icon(
-                          Icons.local_offer_outlined,
-                          color: Colors.grey[400],
-                          size: 20,
-                        ),
+                        Icon(Icons.local_offer_outlined, color: Colors.grey[400], size: 20),
                         const SizedBox(width: 8),
                         Text(
                           'Tags',
@@ -334,27 +333,21 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                         TextButton.icon(
                           onPressed: _showTagDialog,
                           icon: const Icon(Icons.add, color: Colors.blue, size: 20),
-                          label: const Text(
-                            'Add Tag',
-                            style: TextStyle(color: Colors.blue),
-                          ),
+                          label: const Text('Add Tag', style: TextStyle(color: Colors.blue)),
                         ),
                       ],
                     ),
 
                     const SizedBox(height: 12),
 
-                    // Tags display
+                    // Tag chips or empty state
                     if (textPostState.tags.isNotEmpty)
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
                         children: textPostState.tags.map((tag) {
                           return Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.blue.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
@@ -372,7 +365,8 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                                 ),
                                 const SizedBox(width: 4),
                                 GestureDetector(
-                                  onTap: () => ref.read(textPostProvider.notifier).removeTag(tag),
+                                  onTap: () =>
+                                      ref.read(textPostProvider.notifier).removeTag(tag),
                                   child: const Icon(
                                     Icons.close,
                                     color: Colors.blue,
@@ -391,67 +385,31 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
                         decoration: BoxDecoration(
                           color: Colors.grey[900],
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[800]!),
+                          border: Border.all(color: Colors.blueAccent, width: 1.5),
                         ),
-                        child: Text(
-                          'No tags added yet. Tags help others discover your post.',
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-
-                    const SizedBox(height: 24),
-
-                    // Formatting tips
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[900],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[800]!),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.lightbulb_outline,
-                                color: Colors.yellow[600],
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Writing Tips',
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline_sharp,
+                              color: Colors.blueAccent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'No tags added yet. Tags help others discover your post.',
                                 style: TextStyle(
-                                  color: Colors.yellow[600],
-                                  fontSize: 16,
+                                  color: Colors.grey[200],
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            '• Write a clear, descriptive title\n'
-                                '• Use proper grammar and spelling\n'
-                                '• Break up long text into paragraphs\n'
-                                '• Add relevant tags to reach your audience\n'
-                                '• Be respectful and constructive',
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 14,
-                              height: 1.5,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Add some bottom padding
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -459,117 +417,6 @@ class _TextPostPageState extends ConsumerState<ToastPage> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Post preview widget (optional)
-class PostPreviewWidget extends ConsumerWidget {
-  const PostPreviewWidget({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final textPostState = ref.watch(textPostProvider);
-    final isTablet = MediaQuery.of(context).size.width > 600;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[800]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Preview header
-          Row(
-            children: [
-              Icon(
-                Icons.preview,
-                color: Colors.grey[400],
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Preview',
-                style: TextStyle(
-                  color: Colors.grey[400],
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Title preview
-          if (textPostState.title.isNotEmpty)
-            Text(
-              textPostState.title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: isTablet ? 20 : 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-
-          const SizedBox(height: 12),
-
-          // Content preview
-          if (textPostState.content.isNotEmpty)
-            Text(
-              textPostState.content,
-              style: TextStyle(
-                color: Colors.grey[300],
-                fontSize: isTablet ? 16 : 14,
-                height: 1.5,
-              ),
-              maxLines: 5,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-          // Tags preview
-          if (textPostState.tags.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: textPostState.tags.map((tag) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    tag,
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      fontSize: 12,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-
-          // Empty state
-          if (textPostState.title.isEmpty && textPostState.content.isEmpty)
-            Text(
-              'Start writing to see preview...',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-        ],
       ),
     );
   }

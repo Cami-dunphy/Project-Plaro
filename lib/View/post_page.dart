@@ -8,6 +8,7 @@ import '../ViewModel/post_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../ViewModel/auth_provider.dart';
 import '../ViewModel/setProfileProvider.dart';
+
 class PostCreateScreen extends ConsumerStatefulWidget {
   @override
   ConsumerState<PostCreateScreen> createState() => _PostCreateScreenState();
@@ -16,33 +17,22 @@ class PostCreateScreen extends ConsumerStatefulWidget {
 class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
-  final TextEditingController _captionController = TextEditingController();
-  final TextEditingController _tagsController = TextEditingController();
-
-  final FocusNode _titleFocusNode = FocusNode();
-  final FocusNode _contentFocusNode = FocusNode();
-  final FocusNode _captionFocusNode = FocusNode();
-  final FocusNode _tagsFocusNode = FocusNode();
+  final TextEditingController _tagController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   final SupabaseClient _supabase = Supabase.instance.client;
-
-
-
-  bool _isExpanded = false;
   List<String> _tags = [];
-
 
   @override
   void initState() {
     super.initState();
+
     _titleController.addListener(() {
       ref.read(postCreateProvider.notifier).updateTitle(_titleController.text);
     });
+
     _contentController.addListener(() {
       ref.read(postCreateProvider.notifier).updateContent(_contentController.text);
-    });
-    _captionController.addListener(() {
-      ref.read(postCreateProvider.notifier).updateCaption(_captionController.text);
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -57,23 +47,64 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
-    _captionController.dispose();
-    _tagsController.dispose();
-    _titleFocusNode.dispose();
-    _contentFocusNode.dispose();
-    _captionFocusNode.dispose();
-    _tagsFocusNode.dispose();
+    _tagController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _addTag() {
-    final tag = _tagsController.text.trim();
+  void _showTagDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Add Tag', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: _tagController,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Enter tag name',
+            hintStyle: TextStyle(color: Colors.grey),
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.blue),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.blue),
+            ),
+          ),
+          onSubmitted: (value) {
+            if (value.isNotEmpty) {
+              _addTag(value);
+              _tagController.clear();
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              if (_tagController.text.isNotEmpty) {
+                _addTag(_tagController.text);
+                _tagController.clear();
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Add', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addTag(String tag) {
     if (tag.isNotEmpty && !_tags.contains(tag)) {
       setState(() {
         _tags.add(tag);
       });
       ref.read(postCreateProvider.notifier).updateTags(_tags);
-      _tagsController.clear();
     }
   }
 
@@ -87,7 +118,6 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
   Future<void> _handleCreatePost() async {
     final success = await ref.read(postCreateProvider.notifier).createPost();
     if (success) {
-      // Navigate back and show success message
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -96,6 +126,34 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
         ),
       );
     }
+  }
+
+  void _showDiscardDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text('Discard Changes?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'You have unsaved changes. Are you sure you want to discard them?',
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              ref.read(postCreateProvider.notifier).clearForm();
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            },
+            child: const Text('Discard', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showMediaPicker() {
@@ -173,9 +231,10 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
   @override
   Widget build(BuildContext context) {
     final postCreateState = ref.watch(postCreateProvider);
-    final screenHeight = MediaQuery.of(context).size.height;
     final authState = ref.watch(authStateProvider);
     final profileState = ref.watch(setProfileProvider);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isTablet = screenWidth > 600;
 
     // Show error messages
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -193,262 +252,306 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
       }
     });
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
+    return PopScope(
+      canPop: !postCreateState.hasUnsavedChanges,
+      onPopInvoked: (didPop) {
+        if (!didPop && postCreateState.hasUnsavedChanges) {
+          _showDiscardDialog();
+        }
+      },
+      child: Scaffold(
         backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'Create Post',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+        appBar: AppBar(
+          backgroundColor: Colors.black,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.grey),
+            onPressed: () {
+              if (postCreateState.hasUnsavedChanges) {
+                _showDiscardDialog();
+              } else {
+                Navigator.pop(context);
+              }
+            },
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: postCreateState.isLoading ? null : _handleCreatePost,
-            child: postCreateState.isLoading
-                ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                color: Colors.blue,
-                strokeWidth: 2,
-              ),
-            )
-                : const Text(
-              'Post',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+          title: Text(
+            'Create Post',
+            style: TextStyle(
+              color: Colors.grey[400],
+              fontSize: isTablet ? 20 : 16,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          actions: [
+            if (postCreateState.hasUnsavedChanges)
+              TextButton(
+                onPressed: postCreateState.isLoading
+                    ? null
+                    : () => ref.read(postCreateProvider.notifier).saveDraft(),
+                child: Text(
+                  'Draft',
+                  style: TextStyle(
+                    color: postCreateState.isLoading ? Colors.grey : Colors.orange,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: postCreateState.isLoading ? null : _handleCreatePost,
+          backgroundColor: Colors.blue,
+          icon: const Icon(Icons.send_sharp, size: 20, color: Colors.white),
+          label: const Text(
+            'Post',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        body: Column(
           children: [
-
-            // Media Section
-            if (postCreateState.selectedMedia.isNotEmpty)
+            // Error
+            if (postCreateState.error != null)
               Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                width: double.infinity,
+                color: Colors.red.withOpacity(0.1),
+                padding: const EdgeInsets.all(12),
+                child: Row(
                   children: [
-                    const Text(
-                      'Media',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    const Icon(Icons.error, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        postCreateState.error!,
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      height: 120,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: postCreateState.selectedMedia.length,
-                        itemBuilder: (context, index) {
-                          final media = postCreateState.selectedMedia[index];
-                          return Container(
-                            width: 120,
-                            height: 120,
-                            margin: const EdgeInsets.only(right: 8),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.grey[800],
-                            ),
-                            child: Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    File(media.path),
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: GestureDetector(
-                                    onTap: () => ref.read(postCreateProvider.notifier).removeMedia(index),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.red,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                      onPressed: () => ref.read(postCreateProvider.notifier).clearError(),
                     ),
                   ],
                 ),
               ),
 
-            // Add Media Button
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: OutlinedButton.icon(
-                onPressed: _showMediaPicker,
-                icon: const Icon(Icons.add_photo_alternate, color: Colors.blue),
-                label: const Text(
-                  'Add Media',
-                  style: TextStyle(color: Colors.blue),
-                ),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.grey[700]!),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+            // Success
+            if (postCreateState.successMessage != null)
+              Container(
+                width: double.infinity,
+                color: Colors.green.withOpacity(0.1),
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        postCreateState.successMessage!,
+                        style: const TextStyle(color: Colors.green),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.green, size: 20),
+                      onPressed: () => ref.read(postCreateProvider.notifier).clearSuccessMessage(),
+                    ),
+                  ],
                 ),
               ),
-            ),
 
+            // Loader
+            if (postCreateState.isLoading)
+              const LinearProgressIndicator(
+                backgroundColor: Colors.grey,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+              ),
 
-            // Title Input
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _titleFocusNode.hasFocus ? Colors.blue : Colors.grey[700]!,
-                  width: 1,
-                ),
-              ),
-              child: TextField(
-                controller: _titleController,
-                focusNode: _titleFocusNode,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'Add a title...',
-                  hintStyle: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 18,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
-                ),
-                maxLines: 2,
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) => _contentFocusNode.requestFocus(),
-              ),
-            ),
-
-            // Content Input
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _contentFocusNode.hasFocus ? Colors.blue : Colors.grey[700]!,
-                  width: 1,
-                ),
-              ),
-              child: TextField(
-                controller: _contentController,
-                focusNode: _contentFocusNode,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  height: 1.5,
-                ),
-                decoration: InputDecoration(
-                  hintText: 'What\'s on your mind?',
-                  hintStyle: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 16,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.all(16),
-                ),
-                maxLines: null,
-                minLines: 5,
-                textInputAction: TextInputAction.newline,
-              ),
-            ),
-
-            // Tags Section
-            Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _tagsFocusNode.hasFocus ? Colors.blue : Colors.grey[700]!,
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Tags Input
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _tagsController,
-                          focusNode: _tagsFocusNode,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'Add tags...',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[600],
+            // Main content
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Media Preview
+                    if (postCreateState.selectedMedia.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Media Preview',
+                            style: TextStyle(
+                              color: Colors.white,
                               fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
-                            border: InputBorder.none,
-                            contentPadding: const EdgeInsets.all(16),
                           ),
-                          onSubmitted: (_) => _addTag(),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 150,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: postCreateState.selectedMedia.length,
+                              itemBuilder: (context, index) {
+                                final media = postCreateState.selectedMedia[index];
+                                return Container(
+                                  width: 150,
+                                  height: 150,
+                                  margin: const EdgeInsets.only(right: 8),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12),
+                                    color: Colors.grey[800],
+                                  ),
+                                  child: Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Image.file(
+                                          File(media.path),
+                                          width: 150,
+                                          height: 150,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 4,
+                                        right: 4,
+                                        child: GestureDetector(
+                                          onTap: () => ref.read(postCreateProvider.notifier).removeMedia(index),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+
+                    // Add Media Button
+    Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    child: OutlinedButton.icon(
+    onPressed: _showMediaPicker,
+    icon: const Icon(Icons.add_photo_alternate, color: Colors.blue, size: 20),
+    label: const Text(
+    'Add Media',
+    style: TextStyle(color: Colors.blue, fontSize: 14),
+    ),
+    style: OutlinedButton.styleFrom(
+    side: BorderSide(color: Colors.blue),
+    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+    shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(8),
+    ),
+    ),
+    ),
+    ),
+
+
+                    // Title Input
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue),
+                      ),
+                      child: TextField(
+                        controller: _titleController,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isTablet ? 20 : 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Enter your title here...',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: InputBorder.none,
+                        ),
+                        maxLines: null,
+                        textInputAction: TextInputAction.next,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Content Input
+                    Container(
+                      height: 250,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.black87,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.blue),
+                      ),
+                      child: Scrollbar(
+                        thumbVisibility: true,
+                        child: SingleChildScrollView(
+                          child: TextField(
+                            controller: _contentController,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: isTablet ? 18 : 16,
+                              height: 1.5,
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Write your post content here...',
+                              hintStyle: TextStyle(color: Colors.grey),
+                              border: InputBorder.none,
+                            ),
+                            maxLines: null,
+                            keyboardType: TextInputType.multiline,
+                          ),
                         ),
                       ),
-                      IconButton(
-                        onPressed: _addTag,
-                        icon: const Icon(Icons.add, color: Colors.blue),
-                      ),
-                    ],
-                  ),
+                    ),
 
-                  // Tags Display
-                  if (_tags.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Wrap(
+                    const SizedBox(height: 24),
+
+                    // Tags Section
+                    Row(
+                      children: [
+                        Icon(Icons.local_offer_outlined, color: Colors.grey[400], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Tags',
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton.icon(
+                          onPressed: _showTagDialog,
+                          icon: const Icon(Icons.add, color: Colors.blue, size: 20),
+                          label: const Text('Add Tag', style: TextStyle(color: Colors.blue)),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Tag chips or empty state
+                    if (_tags.isNotEmpty)
+                      Wrap(
                         spacing: 8,
                         runSpacing: 8,
                         children: _tags.map((tag) {
@@ -456,14 +559,14 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.blue.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: Colors.blue.withOpacity(0.5)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  '#$tag',
+                                  tag,
                                   style: const TextStyle(
                                     color: Colors.blue,
                                     fontSize: 14,
@@ -482,80 +585,117 @@ class _PostCreateScreenState extends ConsumerState<PostCreateScreen> {
                             ),
                           );
                         }).toList(),
+                      )
+                    else
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[900],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blueAccent, width: 1.5),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.lightbulb_outline_sharp,
+                              color: Colors.blueAccent,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'No tags added yet. Tags help others discover your post.',
+                                style: TextStyle(
+                                  color: Colors.grey[200],
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 24),
+
+                    // Preview Section
+                    Text(
+                      'Preview',
+                      style: TextStyle(
+                        color: Colors.grey[400],
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 8),
+                    Divider(color: Colors.grey[800], thickness: 1),
+                    const SizedBox(height: 8),
 
-            SizedBox(height: 10.0),
-            Text(
-              'Preview',
-              style: const TextStyle(
-                color: Colors.blue,
-                fontSize: 14,
-              ),
-            ),
-            Divider(thickness: 0.1,),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: (_titleController.text.isEmpty &&
+                          _contentController.text.isEmpty &&
+                          _tags.isEmpty &&
+                          postCreateState.selectedMedia.isEmpty)
+                          ? Container(
+                        padding: const EdgeInsets.all(16),
 
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Container(
-                child: (_titleController.text.isEmpty &&
-                    _contentController.text.isEmpty &&
-                    _tags.isEmpty &&
-                    postCreateState.selectedMedia.isEmpty)
-                    ? const Center(
-                  child: Text(
-                    'Start typing to see a preview',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                )
-                    : authState.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, stack) => Center(
-                    child: Text('Error loading user data: $error'),
-                  ),
-                  data: (session) {
-                    return profileState.when(
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (error, stack) => Center(
-                        child: Text('Error loading profile: $error'),
-                      ),
-                      data: (profile) {
-                        final userId = session?.user?.id ?? 'preview_user';
-                        final username = profile?.username ?? 'You';
-                        final profilePic = profile?.profilePic;
-
-                        return PostCard(
-                          post: Post_feed(
-                            post_id: 'preview_${DateTime.now().millisecondsSinceEpoch}',
-
-                            user_id: userId,
-                            title: _titleController.text,
-                            content: _contentController.text,
-                            caption: _captionController.text,
-                            tags: _tags,
-                            localMediaFiles: postCreateState.selectedMedia,
-                            username: username,
-                            profile_pic: profilePic,
-                            created_at: DateTime.now(),
-                            like_count: 0,
-                            comment_count: 0,
-                            share_count: 0,
-                            isliked: false,
-                            commentsList: [],
+                        child: Center(
+                          child: Text(
+                            'Start typing to see a preview',
+                            style: TextStyle(color: Colors.grey[600]),
                           ),
-                          isPreview:true,
-                        );
-                      },
-                    );
-                  },
+                        ),
+                      )
+                          : authState.when(
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        error: (error, stack) => Center(
+                          child: Text('Error loading user data: $error', style: TextStyle(color: Colors.red)),
+                        ),
+                        data: (session) {
+                          return profileState.when(
+                            loading: () => const Center(child: CircularProgressIndicator()),
+                            error: (error, stack) => Center(
+                              child: Text('Error loading profile: $error', style: TextStyle(color: Colors.red)),
+                            ),
+                            data: (profile) {
+                              final userId = session?.user?.id ?? 'preview_user';
+                              final username = profile?.username ?? 'You';
+                              final profilePic = profile?.profilePic;
+
+                              return PostCard(
+                                post: Post_feed(
+                                  post_id: 'preview_${DateTime.now().millisecondsSinceEpoch}',
+                                  user_id: userId,
+                                  title: _titleController.text,
+                                  content: _contentController.text,
+                                  caption: '',
+                                  tags: _tags,
+                                  localMediaFiles: postCreateState.selectedMedia,
+                                  username: username,
+                                  profile_pic: profilePic,
+                                  created_at: DateTime.now(),
+                                  like_count: 0,
+                                  comment_count: 0,
+                                  share_count: 0,
+                                  isliked: false,
+                                  commentsList: [],
+                                ),
+                                isPreview: true,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 100),
+                  ],
                 ),
               ),
             ),
-            // Bottom spacing
-            SizedBox(height: screenHeight * 0.1),
           ],
         ),
       ),

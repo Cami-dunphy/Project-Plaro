@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final themeNotifierProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>(
-      (ref) => ThemeNotifier(),
+  (ref) => ThemeNotifier(),
 );
 
 class ThemeNotifier extends StateNotifier<ThemeMode> {
-  // Default theme is now Dark
+  // Default theme is Dark
   ThemeNotifier() : super(ThemeMode.dark);
 
   void toggleTheme(bool isDark) {
@@ -38,19 +38,13 @@ class AppThemes {
       elevation: 0,
       iconTheme: IconThemeData(color: Colors.white),
     ),
-    drawerTheme: const DrawerThemeData(
-      backgroundColor: Colors.black87,
-    ),
-    iconTheme: const IconThemeData(
-      color: Colors.white,
-    ),
-    dividerColor: Colors.grey[700],
+    drawerTheme: const DrawerThemeData(backgroundColor: Colors.black87),
+    iconTheme: const IconThemeData(color: Colors.white),
+    dividerColor: Colors.grey[700]!, // fixed
     cardTheme: CardTheme(
       color: Colors.black87,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: Colors.white),
@@ -78,19 +72,13 @@ class AppThemes {
       elevation: 0,
       iconTheme: IconThemeData(color: Colors.black87),
     ),
-    drawerTheme: const DrawerThemeData(
-      backgroundColor: Colors.white,
-    ),
-    iconTheme: const IconThemeData(
-      color: Colors.black87,
-    ),
-    dividerColor: Colors.grey[300],
+    drawerTheme: const DrawerThemeData(backgroundColor: Colors.white),
+    iconTheme: const IconThemeData(color: Colors.black87),
+    dividerColor: Colors.grey[300]!, // fixed
     cardTheme: CardTheme(
       color: Colors.white,
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: Colors.black87),

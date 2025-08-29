@@ -1,0 +1,13 @@
+[33m5695beb[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/jegan[m[33m)[m HEAD@{0}: pull --rebase origin jegan (start): checkout 5695bebb8e30b145a99830dadbe8c29c294473a7
+[33m1d261a9[m[33m ([m[1;32mjegan[m[33m)[m HEAD@{1}: commit: added google auth
+[33mbd00874[m HEAD@{2}: commit: google login
+[33md5ba416[m HEAD@{3}: commit: added google auth feature
+[33m26b7100[m HEAD@{4}: commit (merge): errors cleard
+[33mcc0361b[m HEAD@{5}: commit: fresh
+[33mf762d13[m HEAD@{6}: reset: moving to origin/cpk
+[33m5695beb[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/jegan[m[33m)[m HEAD@{7}: checkout: moving from jegan to jegan
+[33m5695beb[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/jegan[m[33m)[m HEAD@{8}: checkout: moving from jegan to jegan
+[33m5695beb[m[33m ([m[1;36mHEAD[m[33m, [m[1;31morigin/jegan[m[33m)[m HEAD@{9}: commit (merge): Merge branch 'cpk' of https://github.com/plaroindia/Project-Plaro into jegan
+[33m334f71c[m HEAD@{10}: checkout: moving from jegan to jegan
+[33m334f71c[m HEAD@{11}: checkout: moving from main to jegan
+[33me4321ad[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{12}: clone: from https://github.com/plaroindia/Project-Plaro.git

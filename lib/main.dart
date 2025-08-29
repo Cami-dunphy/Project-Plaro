@@ -9,14 +9,12 @@ import 'View/chat_list.dart';
 import 'ViewModel/user_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends ConsumerWidget {
-
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeNotifierProvider);
@@ -26,7 +24,9 @@ class MyApp extends ConsumerWidget {
         '/login': (context) => LoginScreen(),
         '/home': (context) => HomeScreen(),
         '/navipg': (context) => navCard(),
-        '/chat_list': (context) =>ChatList(userId: Supabase.instance.client.auth.currentUser!.id),
+        '/chat_list':
+            (context) =>
+                ChatList(userId: Supabase.instance.client.auth.currentUser!.id),
       },
       theme: AppThemes.lightTheme,
       darkTheme: AppThemes.darkTheme,

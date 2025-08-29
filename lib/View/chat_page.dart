@@ -68,7 +68,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
   void dispose() {
     _messageController.removeListener(_onMessageChanged);
     _scrollController.removeListener(_onScroll);
-    _messageFocusNode.removeListener(_onFocusChanged); // ADDED: Remove focus listener
+    _messageFocusNode.removeListener(
+      _onFocusChanged,
+    ); // ADDED: Remove focus listener
     _messageController.dispose();
     _scrollController.dispose();
     _messageFocusNode.dispose();
@@ -124,7 +126,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
     // Check if user is at bottom
     if (_scrollController.hasClients) {
       final position = _scrollController.position;
-      _shouldAutoScroll = position.pixels >= position.maxScrollExtent - 100; // INCREASED threshold
+      _shouldAutoScroll =
+          position.pixels >=
+          position.maxScrollExtent - 100; // INCREASED threshold
 
       // Load more messages when scrolling to top
       if (position.pixels <= 200 && _currentUserId != null) {
@@ -149,7 +153,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
 
   // FIXED: Better scroll to bottom logic
   void _scrollToBottom({bool animated = true}) {
-    if (_scrollController.hasClients && _shouldAutoScroll && !_isUserScrolling) {
+    if (_scrollController.hasClients &&
+        _shouldAutoScroll &&
+        !_isUserScrolling) {
       if (animated) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
@@ -185,7 +191,8 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
 
     try {
       if (_editingMessageId != null) {
-        await ref.read(directMessageProvider(params).notifier)
+        await ref
+            .read(directMessageProvider(params).notifier)
             .editMessage(_editingMessageId!, message);
         _cancelEdit();
       } else {
@@ -200,10 +207,10 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
         _scrollToBottomForced();
 
         // Send message - real-time listener will handle UI update
-        await ref.read(directMessageProvider(params).notifier)
+        await ref
+            .read(directMessageProvider(params).notifier)
             .sendMessage(content: message);
       }
-
     } catch (error) {
       // Restore message if sending failed
       if (_editingMessageId == null) {
@@ -225,25 +232,28 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
     );
 
     try {
-      final mediaContent = mediaItem.isImage
-          ? 'ðŸ"· Image: ${mediaItem.fileName}'
-          : 'ðŸ"„ File: ${mediaItem.fileName}';
+      final mediaContent =
+          mediaItem.isImage
+              ? 'ðŸ"· Image: ${mediaItem.fileName}'
+              : 'ðŸ"„ File: ${mediaItem.fileName}';
 
       // Ensure scroll after media send
       _shouldAutoScroll = true;
 
-      await ref.read(directMessageProvider(params).notifier).sendMessage(
-        content: mediaContent,
-        messageType: mediaItem.isImage ? 'image' : 'file',
-        metadata: {
-          'media_id': mediaItem.id,
-          'file_url': mediaItem.fileUrl,
-          'file_name': mediaItem.fileName,
-          'file_size': mediaItem.fileSize,
-          'mime_type': mediaItem.mimeType,
-          'media_type': mediaItem.mediaType.value,
-        },
-      );
+      await ref
+          .read(directMessageProvider(params).notifier)
+          .sendMessage(
+            content: mediaContent,
+            messageType: mediaItem.isImage ? 'image' : 'file',
+            metadata: {
+              'media_id': mediaItem.id,
+              'file_url': mediaItem.fileUrl,
+              'file_name': mediaItem.fileName,
+              'file_size': mediaItem.fileSize,
+              'mime_type': mediaItem.mimeType,
+              'media_type': mediaItem.mediaType.value,
+            },
+          );
 
       _scrollToBottomForced();
     } catch (error) {
@@ -273,7 +283,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
         receiverId: widget.receiverId,
       );
       Future.microtask(() {
-        ref.read(directMessageProvider(params).notifier).deleteMessage(messageId);
+        ref
+            .read(directMessageProvider(params).notifier)
+            .deleteMessage(messageId);
       });
     }
   }
@@ -287,11 +299,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           duration: const Duration(seconds: 2),
-          margin: const EdgeInsets.only(
-            bottom: 80,
-            left: 16,
-            right: 16,
-          ),
+          margin: const EdgeInsets.only(bottom: 80, left: 16, right: 16),
         ),
       );
     }
@@ -353,7 +361,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                     Future.microtask(() {
                       if (mounted) {
                         _showErrorSnackBar(mediaState.error!);
-                        ref.read(chatMediaProvider(mediaParams).notifier).clearError();
+                        ref
+                            .read(chatMediaProvider(mediaParams).notifier)
+                            .clearError();
                       }
                     });
                   }
@@ -362,7 +372,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                     Future.microtask(() {
                       if (mounted) {
                         _showErrorSnackBar(chatState.error!);
-                        ref.read(directMessageProvider(params).notifier).clearError();
+                        ref
+                            .read(directMessageProvider(params).notifier)
+                            .clearError();
                       }
                     });
                   }
@@ -378,7 +390,6 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
     );
   }
 
-
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: Colors.grey[900],
@@ -392,10 +403,11 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtherProfileScreen(
-                userId: widget.receiverId,
-                initialUserData: widget.receiver,
-              ),
+              builder:
+                  (context) => OtherProfileScreen(
+                    userId: widget.receiverId,
+                    initialUserData: widget.receiver,
+                  ),
             ),
           );
         },
@@ -410,25 +422,22 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                   shape: BoxShape.circle,
                   color: Colors.grey[700],
                 ),
-                child: widget.receiverProfilePic?.isNotEmpty == true
-                    ? ClipOval(
-                  child: Image.network(
-                    widget.receiverProfilePic!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.person,
-                        color: Colors.grey[400],
-                        size: 20,
-                      );
-                    },
-                  ),
-                )
-                    : Icon(
-                  Icons.person,
-                  color: Colors.grey[400],
-                  size: 20,
-                ),
+                child:
+                    widget.receiverProfilePic?.isNotEmpty == true
+                        ? ClipOval(
+                          child: Image.network(
+                            widget.receiverProfilePic!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Icon(
+                                Icons.person,
+                                color: Colors.grey[400],
+                                size: 20,
+                              );
+                            },
+                          ),
+                        )
+                        : Icon(Icons.person, color: Colors.grey[400], size: 20),
               ),
             ),
             const SizedBox(width: 12),
@@ -447,10 +456,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                   ),
                   Text(
                     'Tap to view profile',
-                    style: TextStyle(
-                      color: Colors.grey[400],
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
                   ),
                 ],
               ),
@@ -471,48 +477,59 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
           icon: const Icon(Icons.more_vert, color: Colors.white),
           color: Colors.grey[800],
           onSelected: _handleMenuSelection,
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'clear',
-              child: Row(
-                children: [
-                  Icon(Icons.clear_all, color: Colors.white, size: 20),
-                  SizedBox(width: 12),
-                  Text('Clear chat', style: TextStyle(color: Colors.white)),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'mute',
-              child: Row(
-                children: [
-                  Icon(Icons.notifications_off, color: Colors.white, size: 20),
-                  SizedBox(width: 12),
-                  Text('Mute notifications', style: TextStyle(color: Colors.white)),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'block',
-              child: Row(
-                children: [
-                  Icon(Icons.block, color: Colors.red, size: 20),
-                  SizedBox(width: 12),
-                  Text('Block user', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'report',
-              child: Row(
-                children: [
-                  Icon(Icons.report, color: Colors.orange, size: 20),
-                  SizedBox(width: 12),
-                  Text('Report user', style: TextStyle(color: Colors.orange)),
-                ],
-              ),
-            ),
-          ],
+          itemBuilder:
+              (context) => [
+                const PopupMenuItem(
+                  value: 'clear',
+                  child: Row(
+                    children: [
+                      Icon(Icons.clear_all, color: Colors.white, size: 20),
+                      SizedBox(width: 12),
+                      Text('Clear chat', style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'mute',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.notifications_off,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      SizedBox(width: 12),
+                      Text(
+                        'Mute notifications',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'block',
+                  child: Row(
+                    children: [
+                      Icon(Icons.block, color: Colors.red, size: 20),
+                      SizedBox(width: 12),
+                      Text('Block user', style: TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'report',
+                  child: Row(
+                    children: [
+                      Icon(Icons.report, color: Colors.orange, size: 20),
+                      SizedBox(width: 12),
+                      Text(
+                        'Report user',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
         ),
       ],
     );
@@ -534,7 +551,6 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
 
     // FIXED: More precise auto-scroll logic
     final currentMessageCount = chatState.messages.length;
-
     if (currentMessageCount > _lastMessageCount) {
       // New message arrived - scroll if user is near bottom or if it's their own message
       if (_shouldAutoScroll || !_isUserScrolling) {
@@ -569,10 +585,15 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
         itemBuilder: (context, index) {
           final message = chatState.messages[index];
           final isFromMe = message.senderId == _currentUserId;
-          final previousMessage = index > 0 ? chatState.messages[index - 1] : null;
+          final previousMessage =
+              index > 0 ? chatState.messages[index - 1] : null;
           final showAvatar = previousMessage?.senderId != message.senderId;
-          final showTimestamp = previousMessage == null ||
-              message.createdAt.difference(previousMessage.createdAt).inMinutes > 5;
+          final showTimestamp =
+              previousMessage == null ||
+              message.createdAt
+                      .difference(previousMessage.createdAt)
+                      .inMinutes >
+                  5;
 
           return Column(
             children: [
@@ -589,18 +610,23 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
     );
   }
 
+  // ... (Rest of the methods remain the same - _buildMessageBubble, _buildMediaContent, etc.)
+  // I'll include the essential remaining methods for completeness:
+
   Widget _buildMessageBubble({
     required DirectMessage message,
     required bool isFromMe,
     required bool showAvatar,
   }) {
-    final isMediaMessage = message.messageType == 'image' || message.messageType == 'file';
+    final isMediaMessage =
+        message.messageType == 'image' || message.messageType == 'file';
     final mediaMetadata = message.metadata;
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
-        mainAxisAlignment: isFromMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isFromMe ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isFromMe && showAvatar) ...[
@@ -613,14 +639,23 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
             child: GestureDetector(
               onLongPress: () => _showMessageOptions(message, isFromMe),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: isFromMe ? Colors.blue[600] : Colors.grey[800],
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(20),
                     topRight: const Radius.circular(20),
-                    bottomLeft: isFromMe ? const Radius.circular(20) : const Radius.circular(4),
-                    bottomRight: isFromMe ? const Radius.circular(4) : const Radius.circular(20),
+                    bottomLeft:
+                        isFromMe
+                            ? const Radius.circular(20)
+                            : const Radius.circular(4),
+                    bottomRight:
+                        isFromMe
+                            ? const Radius.circular(4)
+                            : const Radius.circular(20),
                   ),
                 ),
                 child: Column(
@@ -632,21 +667,14 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                       const SizedBox(height: 8),
                     Text(
                       message.content,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 16),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (message.updatedAt != null) ...[
-                          Icon(
-                            Icons.edit,
-                            size: 12,
-                            color: Colors.grey[400],
-                          ),
+                          Icon(Icons.edit, size: 12, color: Colors.grey[400]),
                           const SizedBox(width: 4),
                         ],
                         Text(
@@ -661,7 +689,10 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                           Icon(
                             message.isRead ? Icons.done_all : Icons.done,
                             size: 16,
-                            color: message.isRead ? Colors.blue[300] : Colors.grey[400],
+                            color:
+                                message.isRead
+                                    ? Colors.blue[300]
+                                    : Colors.grey[400],
                           ),
                         ],
                       ],
@@ -681,6 +712,9 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
       ),
     );
   }
+
+  // ... (Include other essential methods like _buildAvatar, _buildTimestamp, etc.)
+  // For brevity, I'll just show the signature of remaining key methods:
   Widget _buildMediaContent(Map<String, dynamic> mediaMetadata) {
     final mediaType = mediaMetadata['media_type'] as String?;
     final fileUrl = mediaMetadata['file_url'] as String?;
@@ -698,10 +732,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
 
   Widget _buildImageContent(String imageUrl, String fileName) {
     return Container(
-      constraints: const BoxConstraints(
-        maxWidth: 250,
-        maxHeight: 200,
-      ),
+      constraints: const BoxConstraints(maxWidth: 250, maxHeight: 200),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey[700],
@@ -717,9 +748,11 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
               height: 150,
               child: Center(
                 child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                      : null,
+                  value:
+                      loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
                   strokeWidth: 2,
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
@@ -768,11 +801,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
               color: Colors.blue.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              _getFileIcon(extension),
-              color: Colors.blue,
-              size: 20,
-            ),
+            child: Icon(_getFileIcon(extension), color: Colors.blue, size: 20),
           ),
           const SizedBox(width: 12),
           Flexible(
@@ -792,10 +821,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                 const SizedBox(height: 2),
                 Text(
                   formattedSize,
-                  style: TextStyle(
-                    color: Colors.grey[400],
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
                 ),
               ],
             ),
@@ -809,11 +835,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                 color: Colors.blue.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Icon(
-                Icons.download,
-                color: Colors.blue,
-                size: 16,
-              ),
+              child: const Icon(Icons.download, color: Colors.blue, size: 16),
             ),
           ),
         ],
@@ -843,7 +865,8 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '${bytes}B';
     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)}KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}MB';
     return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)}GB';
   }
 
@@ -860,39 +883,61 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
         color: Colors.grey[700],
       ),
       child: ClipOval(
-        child: isCurrentUser
-            ? Consumer(
-          builder: (context, ref, child) {
-            final currentUserProfile = ref.watch(
-              userProfileProvider(_currentUserId ?? ''),
-            );
+        child:
+            isCurrentUser
+                ? Consumer(
+                  builder: (context, ref, child) {
+                    final currentUserProfile = ref.watch(
+                      userProfileProvider(_currentUserId ?? ''),
+                    );
 
-            return currentUserProfile.when(
-              data: (profile) {
-                return profile?.profilePic?.isNotEmpty == true
-                    ? Image.network(
-                  profile!.profilePic!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.person, color: Colors.grey[400], size: 12);
+                    return currentUserProfile.when(
+                      data: (profile) {
+                        return profile?.profilePic?.isNotEmpty == true
+                            ? Image.network(
+                              profile!.profilePic!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.person,
+                                  color: Colors.grey[400],
+                                  size: 12,
+                                );
+                              },
+                            )
+                            : Icon(
+                              Icons.person,
+                              color: Colors.grey[400],
+                              size: 12,
+                            );
+                      },
+                      loading:
+                          () => CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.grey[400],
+                          ),
+                      error:
+                          (error, stackTrace) => Icon(
+                            Icons.person,
+                            color: Colors.grey[400],
+                            size: 12,
+                          ),
+                    );
                   },
                 )
-                    : Icon(Icons.person, color: Colors.grey[400], size: 12);
-              },
-              loading: () => CircularProgressIndicator(strokeWidth: 2, color: Colors.grey[400]),
-              error: (error, stackTrace) => Icon(Icons.person, color: Colors.grey[400], size: 12),
-            );
-          },
-        )
-            : (widget.receiverProfilePic?.isNotEmpty == true
-            ? Image.network(
-          widget.receiverProfilePic!,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Icon(Icons.person, color: Colors.grey[400], size: 12);
-          },
-        )
-            : Icon(Icons.person, color: Colors.grey[400], size: 12)),
+                : (widget.receiverProfilePic?.isNotEmpty == true
+                    ? Image.network(
+                      widget.receiverProfilePic!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          Icons.person,
+                          color: Colors.grey[400],
+                          size: 12,
+                        );
+                      },
+                    )
+                    : Icon(Icons.person, color: Colors.grey[400], size: 12)),
       ),
     );
   }
@@ -902,22 +947,15 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
       margin: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         children: [
-          Expanded(
-            child: Divider(color: Colors.grey[800], thickness: 0.5),
-          ),
+          Expanded(child: Divider(color: Colors.grey[800], thickness: 0.5)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               _formatDate(timestamp),
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 12),
             ),
           ),
-          Expanded(
-            child: Divider(color: Colors.grey[800], thickness: 0.5),
-          ),
+          Expanded(child: Divider(color: Colors.grey[800], thickness: 0.5)),
         ],
       ),
     );
@@ -932,10 +970,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
             valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
           ),
           SizedBox(height: 16),
-          Text(
-            'Loading messages...',
-            style: TextStyle(color: Colors.grey),
-          ),
+          Text('Loading messages...', style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -948,11 +983,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.grey[600]),
             const SizedBox(height: 16),
             Text(
               'Failed to load messages',
@@ -966,10 +997,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
             Text(
               error,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 14),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -1004,11 +1032,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 64,
-              color: Colors.grey[600],
-            ),
+            Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey[600]),
             const SizedBox(height: 16),
             Text(
               'No messages yet',
@@ -1022,10 +1046,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
             Text(
               'Start the conversation with ${widget.receiverName}',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 14,
-              ),
+              style: TextStyle(color: Colors.grey[500], fontSize: 14),
             ),
           ],
         ),
@@ -1035,7 +1056,10 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
 
   Widget _buildMessageInput() {
     final mediaParams = createMediaParams(
-      chatId: DirectMessageNotifier.generateChatId(_currentUserId!, widget.receiverId),
+      chatId: DirectMessageNotifier.generateChatId(
+        _currentUserId!,
+        widget.receiverId,
+      ),
       currentUserId: _currentUserId!,
     );
 
@@ -1043,9 +1067,7 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.black26,
-        border: Border(
-          top: BorderSide(color: Colors.black26!, width: 0.5),
-        ),
+        border: Border(top: BorderSide(color: Colors.black26, width: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1072,7 +1094,11 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                   ),
                   GestureDetector(
                     onTap: _cancelEdit,
-                    child: const Icon(Icons.close, color: Colors.orange, size: 16),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.orange,
+                      size: 16,
+                    ),
                   ),
                 ],
               ),
@@ -1117,10 +1143,14 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                     maxLines: null,
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      hintText: _editingMessageId != null
-                          ? 'Edit message...'
-                          : 'Message ${widget.receiverName}...',
-                      hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
+                      hintText:
+                          _editingMessageId != null
+                              ? 'Edit message...'
+                              : 'Message ${widget.receiverName}...',
+                      hintStyle: TextStyle(
+                        color: Colors.grey[500],
+                        fontSize: 16,
+                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 12,
@@ -1140,9 +1170,10 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _isTyping || _editingMessageId != null
-                        ? Colors.blue
-                        : Colors.grey[700],
+                    color:
+                        _isTyping || _editingMessageId != null
+                            ? Colors.blue
+                            : Colors.grey[700],
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
@@ -1166,81 +1197,95 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Send Media',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                _buildAttachmentOption(
-                  Icons.camera_alt,
-                  'Camera',
-                      () async {
-                    Navigator.pop(context);
-                    final result = await ref
-                        .read(chatMediaProvider(mediaParams).notifier)
-                        .pickImageFromCamera();
-                    if (result != null && result.success && result.mediaItem != null) {
-                      await _sendMediaMessage(result.mediaItem!);
-                    }
-                  },
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                _buildAttachmentOption(
-                  Icons.photo_library,
-                  'Gallery',
-                      () async {
-                    Navigator.pop(context);
-                    final result = await ref
-                        .read(chatMediaProvider(mediaParams).notifier)
-                        .pickImageFromGallery();
-                    if (result != null && result.success && result.mediaItem != null) {
-                      await _sendMediaMessage(result.mediaItem!);
-                    }
-                  },
+                const SizedBox(height: 24),
+                const Text(
+                  'Send Media',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                _buildAttachmentOption(
-                  Icons.insert_drive_file,
-                  'Document',
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildAttachmentOption(
+                      Icons.camera_alt,
+                      'Camera',
                       () async {
-                    Navigator.pop(context);
-                    final result = await ref
-                        .read(chatMediaProvider(mediaParams).notifier)
-                        .pickDocument();
-                    if (result != null && result.success && result.mediaItem != null) {
-                      await _sendMediaMessage(result.mediaItem!);
-                    }
-                  },
+                        Navigator.pop(context);
+                        final result =
+                            await ref
+                                .read(chatMediaProvider(mediaParams).notifier)
+                                .pickImageFromCamera();
+                        if (result != null &&
+                            result.success &&
+                            result.mediaItem != null) {
+                          await _sendMediaMessage(result.mediaItem!);
+                        }
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      Icons.photo_library,
+                      'Gallery',
+                      () async {
+                        Navigator.pop(context);
+                        final result =
+                            await ref
+                                .read(chatMediaProvider(mediaParams).notifier)
+                                .pickImageFromGallery();
+                        if (result != null &&
+                            result.success &&
+                            result.mediaItem != null) {
+                          await _sendMediaMessage(result.mediaItem!);
+                        }
+                      },
+                    ),
+                    _buildAttachmentOption(
+                      Icons.insert_drive_file,
+                      'Document',
+                      () async {
+                        Navigator.pop(context);
+                        final result =
+                            await ref
+                                .read(chatMediaProvider(mediaParams).notifier)
+                                .pickDocument();
+                        if (result != null &&
+                            result.success &&
+                            result.mediaItem != null) {
+                          await _sendMediaMessage(result.mediaItem!);
+                        }
+                      },
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 24),
               ],
             ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
-  Widget _buildAttachmentOption(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildAttachmentOption(
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -1252,19 +1297,12 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
               color: Colors.blue.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: Colors.blue,
-              size: 30,
-            ),
+            child: Icon(icon, color: Colors.blue, size: 30),
           ),
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
           ),
         ],
       ),
@@ -1278,86 +1316,106 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[600],
-                borderRadius: BorderRadius.circular(2),
-              ),
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (isFromMe) ...[
+                  ListTile(
+                    leading: const Icon(Icons.edit, color: Colors.blue),
+                    title: const Text(
+                      'Edit',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _startEdit(message);
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete, color: Colors.red),
+                    title: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showDeleteConfirmation(message.id);
+                    },
+                  ),
+                ],
+                ListTile(
+                  leading: const Icon(Icons.copy, color: Colors.white),
+                  title: const Text(
+                    'Copy',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showFeatureNotAvailable('Copy message');
+                  },
+                ),
+                if (!isFromMe) ...[
+                  ListTile(
+                    leading: const Icon(Icons.report, color: Colors.orange),
+                    title: const Text(
+                      'Report',
+                      style: TextStyle(color: Colors.orange),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showFeatureNotAvailable('Report message');
+                    },
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 16),
-            if (isFromMe) ...[
-              ListTile(
-                leading: const Icon(Icons.edit, color: Colors.blue),
-                title: const Text('Edit', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _startEdit(message);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Delete', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showDeleteConfirmation(message.id);
-                },
-              ),
-            ],
-            ListTile(
-              leading: const Icon(Icons.copy, color: Colors.white),
-              title: const Text('Copy', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _showFeatureNotAvailable('Copy message');
-              },
-            ),
-            if (!isFromMe) ...[
-              ListTile(
-                leading: const Icon(Icons.report, color: Colors.orange),
-                title: const Text('Report', style: TextStyle(color: Colors.orange)),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showFeatureNotAvailable('Report message');
-                },
-              ),
-            ],
-          ],
-        ),
-      ),
+          ),
     );
   }
 
   void _showDeleteConfirmation(String messageId) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Delete Message', style: TextStyle(color: Colors.white)),
-        content: const Text(
-          'Are you sure you want to delete this message? This action cannot be undone.',
-          style: TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Delete Message',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: const Text(
+              'Are you sure you want to delete this message? This action cannot be undone.',
+              style: TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _deleteMessage(messageId);
+                },
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _deleteMessage(messageId);
-            },
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1381,83 +1439,99 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
   void _showClearChatDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Clear Chat', style: TextStyle(color: Colors.white)),
-        content: Text(
-          'Are you sure you want to clear all messages with ${widget.receiverName}? This action cannot be undone.',
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Clear Chat',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              'Are you sure you want to clear all messages with ${widget.receiverName}? This action cannot be undone.',
+              style: const TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showFeatureNotAvailable('Clear chat');
+                },
+                child: const Text('Clear', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showFeatureNotAvailable('Clear chat');
-            },
-            child: const Text('Clear', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
   void _showBlockUserDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Block User', style: TextStyle(color: Colors.white)),
-        content: Text(
-          'Are you sure you want to block ${widget.receiverName}? You won\'t receive messages from them.',
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Block User',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              'Are you sure you want to block ${widget.receiverName}? You won\'t receive messages from them.',
+              style: const TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showFeatureNotAvailable('Block user');
+                },
+                child: const Text('Block', style: TextStyle(color: Colors.red)),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showFeatureNotAvailable('Block user');
-            },
-            child: const Text('Block', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 
   void _showReportUserDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: const Text('Report User', style: TextStyle(color: Colors.white)),
-        content: Text(
-          'Report ${widget.receiverName} for inappropriate behavior?',
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+      builder:
+          (context) => AlertDialog(
+            backgroundColor: Colors.grey[900],
+            title: const Text(
+              'Report User',
+              style: TextStyle(color: Colors.white),
+            ),
+            content: Text(
+              'Report ${widget.receiverName} for inappropriate behavior?',
+              style: const TextStyle(color: Colors.white),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showFeatureNotAvailable('Report user');
+                },
+                child: const Text(
+                  'Report',
+                  style: TextStyle(color: Colors.orange),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _showFeatureNotAvailable('Report user');
-            },
-            child: const Text('Report', style: TextStyle(color: Colors.orange)),
-          ),
-        ],
-      ),
     );
   }
+
   void _showFeatureNotAvailable(String feature) {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1499,7 +1573,15 @@ class _IndividualChatPageState extends ConsumerState<IndividualChatPage>
     } else if (messageDate == yesterday) {
       return 'Yesterday';
     } else if (now.difference(dateTime).inDays < 7) {
-      final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      final weekdays = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
       return weekdays[dateTime.weekday - 1];
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';

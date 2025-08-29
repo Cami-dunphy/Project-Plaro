@@ -41,10 +41,13 @@ class AppThemes {
     drawerTheme: const DrawerThemeData(backgroundColor: Colors.black87),
     iconTheme: const IconThemeData(color: Colors.white),
     dividerColor: Colors.grey[700]!, // fixed
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
+      // fixed
       color: Colors.black87,
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
     ),
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: Colors.white),
@@ -75,10 +78,13 @@ class AppThemes {
     drawerTheme: const DrawerThemeData(backgroundColor: Colors.white),
     iconTheme: const IconThemeData(color: Colors.black87),
     dividerColor: Colors.grey[300]!, // fixed
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
+      // fixed
       color: Colors.white,
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
     ),
     textTheme: const TextTheme(
       bodyLarge: TextStyle(color: Colors.black87),

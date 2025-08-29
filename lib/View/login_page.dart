@@ -11,7 +11,8 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -30,10 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       duration: const Duration(seconds: 2),
     );
     _animation = Tween<double>(begin: 0.9, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     )..addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _animationController.reverse();
@@ -64,9 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
         ),
         backgroundColor: color,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         margin: const EdgeInsets.all(10),
       ),
     );
@@ -78,10 +74,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     setState(() => _isLoading = true);
 
     try {
-      final success = await ref.read(authControllerProvider).login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+      final success = await ref
+          .read(authControllerProvider)
+          .login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          );
 
       if (mounted) {
         setState(() => _isLoading = false);
@@ -119,7 +117,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     return null;
   }
 
-  InputDecoration _inputDecoration(String label, {Widget? prefixIcon, Widget? suffixIcon}) {
+  InputDecoration _inputDecoration(
+    String label, {
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return InputDecoration(
@@ -130,9 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       prefixIcon: prefixIcon,
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: isDark
-          ? Colors.grey[900]?.withOpacity(0.3)
-          : Colors.grey[100],
+      fillColor: isDark ? Colors.grey[900]?.withOpacity(0.3) : Colors.grey[100],
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -181,7 +181,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                   alignment: Alignment.topRight,
                   child: IconButton(
                     onPressed: () {
-                      ref.read(themeNotifierProvider.notifier).toggleTheme(!isDark);
+                      ref
+                          .read(themeNotifierProvider.notifier)
+                          .toggleTheme(!isDark);
                     },
                     icon: Icon(
                       isDark ? Icons.light_mode : Icons.dark_mode,
@@ -195,7 +197,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                   scale: _animation,
                   child: CircleAvatar(
                     radius: 60,
-                    backgroundColor: Colors.transparent, // or any fallback color
+                    backgroundColor:
+                        Colors.transparent, // or any fallback color
                     child: ClipOval(
                       child: Image.asset(
                         'assets/plaro_logo.png',
@@ -204,7 +207,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                       ),
                     ),
                   ),
-
                 ),
 
                 const SizedBox(height: 16),
@@ -262,7 +264,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: isDark ? Colors.grey : Colors.grey[600],
                       ),
                       onPressed: () {
@@ -293,9 +297,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             setState(() => _rememberMe = value ?? false);
                           },
                           fillColor: MaterialStateProperty.resolveWith<Color>(
-                                (states) => _rememberMe
-                                ? Colors.blue
-                                : (isDark ? Colors.grey[800]! : Colors.grey[300]!),
+                            (states) =>
+                                _rememberMe
+                                    ? Colors.blue
+                                    : (isDark
+                                        ? Colors.grey[800]!
+                                        : Colors.grey[300]!),
                           ),
                         ),
                         Text(
@@ -308,8 +315,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     ),
                     TextButton(
                       onPressed: () {
-                        _showFeedback('Forgot password feature coming soon!',
-                            Colors.blue, Icons.info);
+                        _showFeedback(
+                          'Forgot password feature coming soon!',
+                          Colors.blue,
+                          Icons.info,
+                        );
                       },
                       child: Text(
                         'Forgot Password?',
@@ -333,22 +343,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     elevation: 2,
                     disabledBackgroundColor: Colors.blue.withOpacity(0.6),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 3,
-                    ),
-                  )
-                      : const Text(
-                    'Sign In',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                          : const Text(
+                            'Sign In',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                 ),
                 const SizedBox(height: 24),
 
@@ -383,12 +394,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                   child: SizedBox(
                     width: 200,
                     child: OutlinedButton(
-                      onPressed: () {
-                        _showFeedback('Google Sign-In Coming Soon!', Colors.blue, Icons.info);
+                      onPressed: () async {
+                        final success =
+                            await ref
+                                .read(authControllerProvider)
+                                .googleSignIn();
+                        if (success && context.mounted) {
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/home',
+                          ); // redirect to home
+                        } else if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Google login failed"),
+                            ),
+                          );
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        foregroundColor: Theme.of(context).colorScheme.onBackground,
+                        foregroundColor:
+                            Theme.of(context).colorScheme.onBackground,
                         side: BorderSide(
                           color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
                         ),
@@ -398,39 +425,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         ),
                         elevation: 0,
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 24,
-                            height: 24,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Padding(
-                              padding: EdgeInsets.all(4.0),
-                              child: Icon(
-                                Icons.g_mobiledata,
-                                color: Colors.blue,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Google',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                      child: const Text("Sign in with Google"),
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
 
                 /// Sign Up Redirect
                 Row(
@@ -444,19 +442,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     ),
                     const SizedBox(width: 4),
                     TextButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SigninScreen(),
-                          ),
-                        );
-                      },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                      ),
+                      onPressed:
+                          _isLoading
+                              ? null
+                              : () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SigninScreen(),
+                                  ),
+                                );
+                              },
+                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
                       child: const Text(
                         'Sign Up',
                         style: TextStyle(

@@ -280,14 +280,18 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen>
             ),
 
             // Optional: Add action buttons for own profile
-            if (isOwnProfile)
-              IconButton(
-                onPressed: () {
-                  // Add edit profile functionality here
-                  // For example: _showEditProfileDialog();
-                },
-                icon: const Icon(Icons.edit, color: Colors.white, size: 20),
-              ),
+            // if (isOwnProfile)
+            //   IconButton(
+            //     onPressed: () {
+            //       // Add edit profile functionality here
+            //       // For example: _showEditProfileDialog();
+            //     },
+            //     icon: const Icon(
+            //       Icons.edit,
+            //       color: Colors.white,
+            //       size: 20,
+            //     ),
+            //   ),
           ],
         ),
       ],

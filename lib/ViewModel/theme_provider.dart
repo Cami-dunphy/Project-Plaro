@@ -41,7 +41,7 @@ class AppThemes {
     drawerTheme: const DrawerThemeData(backgroundColor: Colors.black87),
     iconTheme: const IconThemeData(color: Colors.white),
     dividerColor: Colors.grey[700]!, // fixed
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: Colors.black87,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -75,7 +75,7 @@ class AppThemes {
     drawerTheme: const DrawerThemeData(backgroundColor: Colors.white),
     iconTheme: const IconThemeData(color: Colors.black87),
     dividerColor: Colors.grey[300]!, // fixed
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

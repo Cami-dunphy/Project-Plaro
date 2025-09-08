@@ -28,6 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  supabase_flutter: ^2.8.0 # or latest
+  google_sign_in: ^6.2.1     
   flutter:
     sdk: flutter
 
@@ -36,7 +38,6 @@ dependencies:
   app_links: ^6.1.4
   google_sign_in: ^6.1.0
   cupertino_icons: ^1.0.8
-  supabase_flutter: ^2.8.0
   flutter_riverpod: ^2.6.1
   riverpod_annotation: ^2.6.1
   hooks_riverpod: ^2.6.1

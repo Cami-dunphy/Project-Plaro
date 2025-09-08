@@ -1,7 +1,6 @@
 // providers/text_post_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../Model/text_post.dart';
 
 // State for text post creation
 class TextPostState {
@@ -49,9 +48,11 @@ class TextPostState {
 }
 
 // Text Post Provider
-final textPostProvider = StateNotifierProvider<TextPostNotifier, TextPostState>((ref) {
-  return TextPostNotifier();
-});
+final textPostProvider = StateNotifierProvider<TextPostNotifier, TextPostState>(
+  (ref) {
+    return TextPostNotifier();
+  },
+);
 
 class TextPostNotifier extends StateNotifier<TextPostState> {
   TextPostNotifier() : super(const TextPostState());
@@ -60,11 +61,7 @@ class TextPostNotifier extends StateNotifier<TextPostState> {
 
   // Update title
   void updateTitle(String title) {
-    state = state.copyWith(
-      title: title,
-      hasUnsavedChanges: true,
-      error: null,
-    );
+    state = state.copyWith(title: title, hasUnsavedChanges: true, error: null);
   }
 
   // Update content
@@ -91,11 +88,7 @@ class TextPostNotifier extends StateNotifier<TextPostState> {
   // Remove tag
   void removeTag(String tag) {
     final newTags = state.tags.where((t) => t != tag).toList();
-    state = state.copyWith(
-      tags: newTags,
-      hasUnsavedChanges: true,
-      error: null,
-    );
+    state = state.copyWith(tags: newTags, hasUnsavedChanges: true, error: null);
   }
 
   // Save as draft
@@ -134,10 +127,7 @@ class TextPostNotifier extends StateNotifier<TextPostState> {
         successMessage: 'Draft saved successfully!',
       );
     } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
     }
   }
 
@@ -181,10 +171,7 @@ class TextPostNotifier extends StateNotifier<TextPostState> {
         successMessage: 'Post published successfully!',
       );
     } catch (error) {
-      state = state.copyWith(
-        isLoading: false,
-        error: error.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: error.toString());
     }
   }
 
@@ -197,7 +184,7 @@ class TextPostNotifier extends StateNotifier<TextPostState> {
       isDraft: state.isDraft,
       error: state.error,
       hasUnsavedChanges: state.hasUnsavedChanges,
-      successMessage: null,  // Explicitly set to null
+      successMessage: null, // Explicitly set to null
     );
   }
 

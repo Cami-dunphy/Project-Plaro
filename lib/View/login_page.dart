@@ -330,7 +330,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           onChanged: (value) {
                             setState(() => _rememberMe = value ?? false);
                           },
-                          fillColor: WidgetStateProperty.resolveWith<Color>(
+                          fillColor: MaterialStateProperty.resolveWith<Color>(
                             (states) =>
                                 _rememberMe
                                     ? Colors.blue
@@ -349,12 +349,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ForgotPasswordPage(),
-                          ),
-                        );
+                        // Check if ForgotPasswordPage exists, otherwise show message
+                        try {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordPage(),
+                            ),
+                          );
+                        } catch (e) {
+                          _showFeedback(
+                            'Forgot password feature coming soon!',
+                            Colors.blue,
+                            Icons.info,
+                          );
+                        }
                       },
                       child: Text(
                         'Forgot Password?',
@@ -452,35 +461,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   strokeWidth: 2,
                                 ),
                               )
-                              : Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(4.0),
-                                      child: Icon(
-                                        Icons.g_mobiledata,
-                                        color: Colors.blue,
-                                        size: 16,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Text(
-                                    'Google',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              : const Text("Sign in with Google"),
                     ),
                   ),
                 ),

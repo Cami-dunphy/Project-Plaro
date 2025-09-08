@@ -57,16 +57,9 @@ class MyApp extends ConsumerWidget {
         '/home': (context) => HomeScreen(),
         '/navipg': (context) => navCard(),
         '/chat_list':
-            (context) => ChatList(
-              userId: Supabase.instance.client.auth.currentUser?.id ?? "",
-            ),
-        '/reset-password': (context) {
-          final args = ModalRoute.of(context)?.settings.arguments;
-          final token = args is String ? args : null;
-          return ResetPasswordPage(token: token); // Now handles null tokens
-        },
+            (context) =>
+                ChatList(userId: Supabase.instance.client.auth.currentUser!.id),
       },
-
       theme: AppThemes.lightTheme,
       darkTheme: AppThemes.darkTheme,
       themeMode: themeMode,

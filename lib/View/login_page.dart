@@ -19,7 +19,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isLoading = false;
-  bool _isGoogleLoading = false; // Added separate loading state for Google
+  bool _isGoogleLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
   late AnimationController _animationController;
@@ -102,7 +102,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
   }
 
-  // Fixed: Google Sign-In method that properly calls AuthController
   Future<void> _googleSignIn() async {
     setState(() => _isGoogleLoading = true);
 
@@ -118,10 +117,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             Icons.check_circle,
           );
           Future.delayed(const Duration(seconds: 1), () {
-            Navigator.pushReplacementNamed(
-              context,
-              '/navipg',
-            ); // Changed to navipg to match your login flow
+            Navigator.pushReplacementNamed(context, '/navipg');
           });
         } else {
           _showFeedback('Google Sign-In failed', Colors.red, Icons.error);
@@ -248,7 +244,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
 
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   "PLARO",
                   style: TextStyle(
                     color: Colors.blue,
@@ -334,7 +330,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           onChanged: (value) {
                             setState(() => _rememberMe = value ?? false);
                           },
-                          fillColor: MaterialStateProperty.resolveWith<Color>(
+                          fillColor: WidgetStateProperty.resolveWith<Color>(
                             (states) =>
                                 _rememberMe
                                     ? Colors.blue
@@ -428,15 +424,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
                 const SizedBox(height: 24),
 
-                /// Google Button - Fixed implementation
+                /// Google Button
                 Center(
                   child: SizedBox(
                     width: 200,
                     child: OutlinedButton(
-                      onPressed:
-                          _isGoogleLoading
-                              ? null
-                              : _googleSignIn, // Fixed: Now calls the proper method
+                      onPressed: _isGoogleLoading ? null : _googleSignIn,
                       style: OutlinedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         foregroundColor:
@@ -491,7 +484,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
+
+                const SizedBox(height: 24),
 
                 /// Sign Up Redirect
                 Row(
@@ -506,7 +500,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     const SizedBox(width: 4),
                     TextButton(
                       onPressed:
-                          (_isLoading || _isGoogleLoading)
+                          _isLoading
                               ? null
                               : () {
                                 Navigator.push(

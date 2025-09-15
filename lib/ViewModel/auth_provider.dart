@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 final supAuthProv = Provider((ref) => Supabase.instance.client.auth);
 
@@ -18,6 +17,12 @@ final authControllerProvider = Provider((ref) {
 
 class AuthController {
   final Ref ref;
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId:
+        "381063348704-crl2r9amlaer6v747t0hsurj89g076pi.apps.googleusercontent.com",
+  );
+
   AuthController(this.ref);
 
   /// 🔹 Email/Password Login
@@ -31,7 +36,6 @@ class AuthController {
     } catch (e) {
       debugPrint('Login error: $e');
       return false;
-      return false;
     }
   }
 
@@ -44,14 +48,13 @@ class AuthController {
 
       debugPrint('SignUp response: ${response.user?.email}');
 
-      // Check if user was created (even without session due to email confirmation)
       if (response.user != null) {
         if (response.session != null) {
           debugPrint('SignUp successful with immediate session');
           return true;
         } else {
           debugPrint('SignUp successful - email confirmation required');
-          return true; // User created but needs email confirmation
+          return true;
         }
       } else {
         debugPrint('SignUp failed: No user created');
@@ -63,17 +66,10 @@ class AuthController {
     }
   }
 
-  // Fixed: Moved Google Sign-In inside AuthController class
+  /// 🔹 Google Sign-In
   Future<bool> googleSignIn() async {
     try {
-      final googleSignIn = GoogleSignIn(
-        scopes: ['email', 'profile'],
-        // IMPORTANT → use Web Client ID from Google Cloud
-        serverClientId:
-            "381063348704-crl2r9amlaer6v747t0hsurj89g076pi.apps.googleusercontent.com",
-      );
-
-      final googleUser = await googleSignIn.signIn();
+      final googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         debugPrint("Google Sign-In cancelled");
         return false;
@@ -109,10 +105,16 @@ class AuthController {
     }
   }
 
+  /// 🔹 Logout with Google disconnect
   Future<void> logout() async {
     try {
       await ref.read(supAuthProv).signOut();
-      debugPrint('User logged out successfully');
+      debugPrint('User logged out from Supabase');
+
+      // Also disconnect from Google to clear session cache
+      await _googleSignIn.signOut();
+      await _googleSignIn.disconnect();
+      debugPrint('Google session disconnected');
     } catch (e) {
       debugPrint('Logout error: $e');
     }

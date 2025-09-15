@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 // Byte model
 class Byte {
   final String byteId;
@@ -40,9 +38,11 @@ class Byte {
       commentCount: json['comment_count'] ?? 0,
       shareCount: json['share_count'] ?? 0,
       createdAt: DateTime.parse(
-          json['created_at'] ?? DateTime.now().toIso8601String()),
+        json['created_at'] ?? DateTime.now().toIso8601String(),
+      ),
       updatedAt: DateTime.parse(
-          json['updated_at'] ?? DateTime.now().toIso8601String()),
+        json['updated_at'] ?? DateTime.now().toIso8601String(),
+      ),
       username: json['username'],
       profilePic: json['profile_pic'],
       isLiked: json['isliked'] ?? false,

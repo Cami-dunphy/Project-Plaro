@@ -8,7 +8,7 @@ import 'ViewModel/theme_provider.dart';
 import 'View/chat_list.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:app_links/app_links.dart';
-import 'View/ResetPasswordPage.dart'; // ✅ Added this import
+// ✅ Added this import
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 

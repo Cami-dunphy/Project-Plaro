@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:plaro_3/View/post_page.dart';
-import 'package:plaro_3/View/profile.dart';
 import 'home_page.dart';
 import 'profile.dart';
 import 'toast_page.dart';
@@ -9,12 +8,11 @@ import '../ViewModel/setProfileProvider.dart';
 import '../ViewModel/user_feed_provider.dart';
 import '../ViewModel/follow_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../Model/user_profile.dart';
+import 'byte_page.dart';
+import 'byte_viewer.dart';
+import '../View/course_page.dart';
 
-
-void main() => runApp(MaterialApp(
-  home: navCard(),
-));
+void main() => runApp(MaterialApp(home: navCard()));
 
 class navCard extends ConsumerStatefulWidget {
   @override
@@ -42,8 +40,10 @@ class _navCardState extends ConsumerState<navCard> {
       case 1:
         return Container(); // Placeholder for create (won't be used due to modal)
       case 2:
-        return NotificationsScreen();
+        return ByteViewerPage();
       case 3:
+        return NotificationsScreen();
+      case 4:
         return _buildProfileScreen();
       default:
         return HomeScreen();
@@ -62,7 +62,9 @@ class _navCardState extends ConsumerState<navCard> {
     // Don't pass initialUserData to force fresh loading
     return OtherProfileScreen(
       userId: null, // This indicates it's the current user's profile
-      key: ValueKey('own_profile_${user.id}'), // Force rebuild when user changes
+      key: ValueKey(
+        'own_profile_${user.id}',
+      ), // Force rebuild when user changes
     );
   }
 
@@ -74,11 +76,7 @@ class _navCardState extends ConsumerState<navCard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.person_off,
-              color: Colors.grey[400],
-              size: 64,
-            ),
+            Icon(Icons.person_off, color: Colors.grey[400], size: 64),
             SizedBox(height: 16),
             Text(
               'Please log in to view profile',
@@ -147,10 +145,7 @@ class _navCardState extends ConsumerState<navCard> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        toolbarHeight: 0.0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.black, toolbarHeight: 0.0),
       body: _getPageForIndex(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
@@ -162,22 +157,17 @@ class _navCardState extends ConsumerState<navCard> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Create'),
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add),
-              label: 'Create'
+            icon: Icon(Icons.play_circle_outline),
+            label: 'Bytes',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
             label: 'Notifications',
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile'
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
@@ -192,7 +182,7 @@ class CreateModalSheet extends StatefulWidget {
 
 class _CreateModalSheetState extends State<CreateModalSheet> {
   int _selectedIndex = 0;
-  final List<String> _options = ['Text', 'Post', 'Byte', 'Course'];
+  final List<String> _options = ['Text', 'Post', 'Byte'];
 
   void _onOptionSelected(int index) {
     setState(() {
@@ -208,19 +198,29 @@ class _CreateModalSheetState extends State<CreateModalSheet> {
     // Handle navigation based on selection
     switch (index) {
       case 0: // Text
-        Navigator.push(context,
-            MaterialPageRoute(builder:  (context) =>  ToastPage()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ToastPage()),
+        );
         break;
       case 1: // Post
-        Navigator.push(context,
-            MaterialPageRoute(builder:  (context) =>  PostCreateScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PostCreateScreen()),
+        );
         break;
       case 2: // Byte
-        _showComingSoon('Byte Creation');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ByteCreateScreen()),
+        );
         break;
-      case 3: // Course
-        _showComingSoon('Course Creation');
-        break;
+      // case 3: // Course
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(builder: (context) => CourseCreateScreen()),
+      //   );
+      //   break;
     }
   }
 
@@ -311,12 +311,14 @@ class _CreateModalSheetState extends State<CreateModalSheet> {
                                 width: isTablet ? 60 : 50,
                                 height: isTablet ? 60 : 50,
                                 decoration: BoxDecoration(
-                                  color: _selectedIndex == index
+                                  color:
+                                  _selectedIndex == index
                                       ? Colors.blue
                                       : Colors.grey[800],
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: _selectedIndex == index
+                                    color:
+                                    _selectedIndex == index
                                         ? Colors.blue
                                         : Colors.grey[700]!,
                                     width: 2,
@@ -324,7 +326,8 @@ class _CreateModalSheetState extends State<CreateModalSheet> {
                                 ),
                                 child: Icon(
                                   _getOptionIcon(index),
-                                  color: _selectedIndex == index
+                                  color:
+                                  _selectedIndex == index
                                       ? Colors.white
                                       : Colors.grey[400],
                                   size: isTablet ? 28 : 24,
@@ -335,11 +338,13 @@ class _CreateModalSheetState extends State<CreateModalSheet> {
                               Text(
                                 _options[index],
                                 style: TextStyle(
-                                  color: _selectedIndex == index
+                                  color:
+                                  _selectedIndex == index
                                       ? Colors.blue
                                       : Colors.grey[400],
                                   fontSize: isTablet ? 16 : 14,
-                                  fontWeight: _selectedIndex == index
+                                  fontWeight:
+                                  _selectedIndex == index
                                       ? FontWeight.w600
                                       : FontWeight.w500,
                                 ),
@@ -363,7 +368,8 @@ class _CreateModalSheetState extends State<CreateModalSheet> {
                           margin: const EdgeInsets.symmetric(horizontal: 2),
                           height: 3,
                           decoration: BoxDecoration(
-                            color: _selectedIndex == index
+                            color:
+                            _selectedIndex == index
                                 ? Colors.blue
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(3),
@@ -430,7 +436,8 @@ class _NotificationsScreen extends State<NotificationsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("User",
+                  Text(
+                    "User",
                     style: TextStyle(
                       color: Colors.blue,
                       fontSize: 20.0,
@@ -438,7 +445,8 @@ class _NotificationsScreen extends State<NotificationsScreen> {
                     ),
                   ),
                   SizedBox(height: 3.0),
-                  Text("Note",
+                  Text(
+                    "Note",
                     style: TextStyle(
                       color: Colors.grey,
                       fontSize: 15.0,
@@ -450,7 +458,8 @@ class _NotificationsScreen extends State<NotificationsScreen> {
             ],
           ),
           SizedBox(width: 30.0),
-          Text("Time",
+          Text(
+            "Time",
             style: TextStyle(
               color: Colors.white,
               fontSize: 13.0,

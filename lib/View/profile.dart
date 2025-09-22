@@ -8,11 +8,15 @@ import '../ViewModel/user_feed_provider.dart';
 import '../ViewModel/follow_provider.dart';
 import 'widgets/post_user_card.dart';
 import 'widgets/toast_user_card.dart';
+import '../Model/byte.dart';
 import '../Model/toast.dart';
 import '../Model/post.dart';
 import '../Model/user_profile.dart';
 import '../View/foll_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+// Removed dedicated viewers; using common lightbox overlay
+import '../ViewModel/lightbox_provider.dart';
+import 'widgets/lightbox_overlay.dart';
 
 class OtherProfileScreen extends ConsumerStatefulWidget {
   final String? userId; // null = current user, otherwise other user
@@ -33,6 +37,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
   late TabController _tabController;
   final ScrollController _postsScrollController = ScrollController();
   final ScrollController _toastsScrollController = ScrollController();
+  final ScrollController _bytesScrollController = ScrollController();
 
   // Computed properties
   bool get isOwnProfile => widget.userId == null || widget.userId == Supabase.instance.client.auth.currentUser?.id;
@@ -41,9 +46,10 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _postsScrollController.addListener(_onPostsScroll);
     _toastsScrollController.addListener(_onToastsScroll);
+    _bytesScrollController.addListener(_onBytesScroll);
   }
 
   @override
@@ -51,6 +57,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
     _tabController.dispose();
     _postsScrollController.dispose();
     _toastsScrollController.dispose();
+    _bytesScrollController.dispose();
     super.dispose();
   }
 
@@ -89,6 +96,12 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
     }
   }
 
+  void _onBytesScroll() {
+    if (_bytesScrollController.position.pixels >= _bytesScrollController.position.maxScrollExtent - 200) {
+      ref.read(profileFeedProvider.notifier).loadMoreUserBytes(targetUserId);
+    }
+  }
+
   Future<void> _loadUserProfile() async {
     try {
       if (isOwnProfile) {
@@ -118,6 +131,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
     await Future.wait([
       profileFeedNotifier.loadUserPosts(targetUserId),
       profileFeedNotifier.loadUserToasts(targetUserId),
+      profileFeedNotifier.loadUserBytes(targetUserId),
     ]);
   }
 
@@ -207,11 +221,17 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
               ),
             ];
           },
-          body: TabBarView(
-            controller: _tabController,
+          body: Stack(
             children: [
-              _buildPostsTab(feedState),
-              _buildToastsTab(feedState),
+              TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPostsTab(feedState),
+                  _buildToastsTab(feedState),
+                  _buildBytesTab(feedState),
+                ],
+              ),
+              const LightboxOverlay(),
             ],
           ),
         ),
@@ -222,29 +242,33 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
   Widget _buildHeader(AsyncValue profileState, AsyncValue authState) {
     return Column(
       children: [
-        const SizedBox(height: 30),
         Row(
           children: [
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(
-                Icons.arrow_back,
-                color: Colors.white,
-                size: 20,
+            // Back button - only show for other profiles
+            if (!isOwnProfile)
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                  size: 20,
+                ),
               ),
-            ),
-            const SizedBox(width: 10),
+
+            // Add spacing only when back button is present
+            if (!isOwnProfile) const SizedBox(width: 10),
+
             // Username for all profiles
             Expanded(
               child: profileState.when(
                 data: (profile) => Text(
                   profile?.username ?? widget.initialUserData?.username ?? 'Unknown User',
-                  style: GoogleFonts.playwriteFrModerne( // change googlefont in playwriteseries
+                  style: GoogleFonts.playwriteFrModerne(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
-                    shadows: [
+                    shadows: const [
                       Shadow(
                         blurRadius: 8,
                         color: Colors.blue,
@@ -264,6 +288,20 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                 ),
               ),
             ),
+
+            // Optional: Add action buttons for own profile
+            // if (isOwnProfile)
+            //   IconButton(
+            //     onPressed: () {
+            //       // Add edit profile functionality here
+            //       // For example: _showEditProfileDialog();
+            //     },
+            //     icon: const Icon(
+            //       Icons.edit,
+            //       color: Colors.white,
+            //       size: 20,
+            //     ),
+            //   ),
           ],
         ),
       ],
@@ -399,7 +437,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                       Row(
                         children: [
                           const Icon(
-                            Icons.work_history_outlined,  // icon for the role
+                            Icons.work_history_outlined,
                             color: Colors.lightBlue,
                             size: 16,
                           ),
@@ -413,7 +451,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                             child: Text(
                               profile!.role!,
                               style: const TextStyle(
-                                color: Colors.white ,
+                                color: Colors.green,
                                 fontSize: 12.0,
                                 letterSpacing: 1.0,
                               ),
@@ -422,7 +460,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                         ],
                       ),
                     if (hasLocation && hasRole)
-                      const SizedBox(width: 20), // Spacing between role and location
+                      const SizedBox(width: 20),
                     if (hasLocation)
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -435,7 +473,13 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                               color: Colors.grey.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(profile!.location!),
+                            child: Text(
+                              profile!.location!,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12.0,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -455,12 +499,12 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
               ? Padding(
             padding: const EdgeInsets.only(top: 10.0),
             child: Container(
-              height: 60, // Increased height to prevent overflow
+              height: 60,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.center, // Center vertically
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Flexible( // Use Flexible instead of Expanded for better control
+                  Flexible(
                     child: _buildStatItem(
                       'Followers',
                       profile.followersCount?.toString() ?? '0',
@@ -468,7 +512,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                     ),
                   ),
                   SizedBox(
-                    height: 30, // divider height
+                    height: 30,
                     child: VerticalDivider(
                       color: Colors.grey[600],
                       thickness: 1,
@@ -510,6 +554,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
       ],
     );
   }
+
 
   Widget _buildActionButtons(FollowState? followState) {
     if (isOwnProfile) {
@@ -607,7 +652,6 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
     return Container(
       decoration: BoxDecoration(
         color: Colors.black,
-
       ),
       child: TabBar(
         controller: _tabController,
@@ -616,7 +660,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
             width: 1.5,
             color: Colors.blue[400]!,
           ),
-          insets: const EdgeInsets.symmetric(horizontal: 90.0),//underline change in phn , also scrolling seems dif in phn not like lap,,
+          insets: const EdgeInsets.symmetric(horizontal: 90.0),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.blue,
@@ -639,6 +683,16 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
                 const Icon(Icons.campaign_outlined, size: 16),
                 const SizedBox(width: 4),
                 Text('Toasts (${feedState.toasts.length})'),
+              ],
+            ),
+          ),
+          Tab(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.video_library_outlined, size: 16),
+                const SizedBox(width: 4),
+                Text('Bytes (${feedState.bytes.length})'),
               ],
             ),
           ),
@@ -692,7 +746,9 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
       posts: feedState.posts,
       scrollController: _postsScrollController,
       onPostTap: (post) {
-        print('Tapped post: ${post.post_id}');
+        final posts = feedState.posts;
+        final index = posts.indexWhere((p) => p.post_id == post.post_id);
+        ref.read(lightboxProvider.notifier).openPosts(posts, index < 0 ? 0 : index);
       },
       onLike: (postId) {
         ref.read(profileFeedProvider.notifier).togglePostLike(postId);
@@ -752,7 +808,9 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
       toasts: feedState.toasts,
       scrollController: _toastsScrollController,
       onToastTap: (toast) {
-        print('Tapped toast: ${toast.toast_id}');
+        final toasts = feedState.toasts;
+        final index = toasts.indexWhere((t) => t.toast_id == toast.toast_id);
+        ref.read(lightboxProvider.notifier).openToasts(toasts, index < 0 ? 0 : index);
       },
       onLike: (toastId) {
         ref.read(profileFeedProvider.notifier).toggleToastLike(toastId);
@@ -764,6 +822,60 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
       } : null,
       isLoadingMore: feedState.isLoadingMoreToasts,
       hasMore: feedState.hasMoreToasts,
+    );
+  }
+
+  Widget _buildBytesTab(ProfileFeedState feedState) {
+    if (feedState.isLoadingBytes && feedState.bytes.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+        ),
+      );
+    }
+
+    if (feedState.bytes.isEmpty && !feedState.isLoadingBytes) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.video_library_outlined,
+              size: 64,
+              color: Colors.grey,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isOwnProfile ? 'No bytes yet' : 'No bytes to show',
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isOwnProfile ? 'Your bytes will appear here' : 'This user hasn\'t posted any bytes yet',
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ProfileBytesGrid(
+      bytes: feedState.bytes,
+      scrollController: _bytesScrollController,
+      onByteTap: (byte) {
+        final bytes = feedState.bytes;
+        final index = bytes.indexWhere((b) => b.byteId == byte.byteId);
+        ref.read(lightboxProvider.notifier).openBytes(bytes, index < 0 ? 0 : index);
+      },
+      isLoadingMore: feedState.isLoadingMoreBytes,
+      hasMore: feedState.hasMoreBytes,
     );
   }
 
@@ -813,7 +925,7 @@ class _OtherProfileScreen extends ConsumerState<OtherProfileScreen> with TickerP
           MaterialPageRoute(
             builder: (context) => FollowPage(
               userId: targetUserId,
-              initialTab: label == 'Following' ? 1 : 0, // 0 for followers, 1 for following
+              initialTab: label == 'Following' ? 1 : 0,
             ),
           ),
         );
@@ -897,86 +1009,85 @@ class ProfilePostsGrid extends ConsumerWidget {
     final feedState = ref.watch(profileFeedProvider);
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: CustomScrollView(
-        controller: scrollController,
-        slivers: [
-          if (feedState.error != null)
-            SliverToBoxAdapter(
-              child: Container(
-                margin: const EdgeInsets.all(16),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+        padding: const EdgeInsets.all(8.0),
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            if (feedState.error != null)
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          feedState.error!,
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => ref.read(profileFeedProvider.notifier).clearError(),
+                        icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.error_outline, color: Colors.red, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        feedState.error!,
-                        style: const TextStyle(color: Colors.red, fontSize: 12),
+              ),
+
+            SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.5,
+                crossAxisSpacing: 1,
+                mainAxisSpacing: 1,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  final post = posts[index];
+                  return PostProfileCard(
+                    post: post,
+                    onTap: () => onPostTap(post),
+                  );
+                },
+                childCount: posts.length,
+              ),
+            ),
+            if (isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                  ),
+                ),
+              ),
+            if (!hasMore && posts.isNotEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Text(
+                      'No more posts',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
                       ),
                     ),
-                    IconButton(
-                      onPressed: () => ref.read(profileFeedProvider.notifier).clearError(),
-                      icon: const Icon(Icons.close, color: Colors.red, size: 16),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.60,
-              crossAxisSpacing: 6,
-              mainAxisSpacing: 6,
-            ),
-            delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                final post = posts[index];
-                return PostProfileCard(
-                  post: post,
-                  onTap: () => onPostTap(post),
-                );
-              },
-              childCount: posts.length,
-            ),
-          ),
-          if (isLoadingMore)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(
-                  child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                   ),
                 ),
               ),
-            ),
-          if (!hasMore && posts.isNotEmpty)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(
-                  child: Text(
-                    'No more posts',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
+          ],
+        ));
   }
 }
 
@@ -1005,7 +1116,7 @@ class ProfileToastsGrid extends ConsumerWidget {
     final feedState = ref.watch(profileFeedProvider);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 56, 8, 8), // top padding added
+      padding: const EdgeInsets.fromLTRB(8, 56, 8, 8),
       child: CustomScrollView(
         controller: scrollController,
         slivers: [
@@ -1040,7 +1151,7 @@ class ProfileToastsGrid extends ConsumerWidget {
           SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.8,
+              childAspectRatio: 0.9,
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
             ),
@@ -1084,5 +1195,121 @@ class ProfileToastsGrid extends ConsumerWidget {
         ],
       ),
     );
+  }
+}
+
+class ProfileBytesGrid extends ConsumerWidget {
+  final List<Byte> bytes;
+  final ScrollController scrollController;
+  final Function(Byte) onByteTap;
+  final bool isLoadingMore;
+  final bool hasMore;
+
+  const ProfileBytesGrid({
+    Key? key,
+    required this.bytes,
+    required this.scrollController,
+    required this.onByteTap,
+    required this.isLoadingMore,
+    required this.hasMore,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feedState = ref.watch(profileFeedProvider);
+
+    return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: CustomScrollView(
+          controller: scrollController,
+          slivers: [
+            if (feedState.error != null)
+              SliverToBoxAdapter(
+                child: Container(
+                  margin: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          feedState.error!,
+                          style: const TextStyle(color: Colors.red, fontSize: 12),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => ref.read(profileFeedProvider.notifier).clearError(),
+                        icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+            SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.9,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+              ),
+              delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                  final byte = bytes[index];
+                  return GestureDetector(
+                    onTap: () => onByteTap(byte),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Center(
+                            child: Icon(Icons.play_circle_outline, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                childCount: bytes.length,
+              ),
+            ),
+            if (isLoadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                    ),
+                  ),
+                ),
+              ),
+            if (!hasMore && bytes.isNotEmpty)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Text(
+                      'No more bytes',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ));
   }
 }

@@ -21,14 +21,14 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\Asus\\AndroidStudioProjects\\Project-Plaro-cpk (4)\\Project-Plaro-cpk\\android\\app\\src\\main\\res\\values-night\\styles.xml",
+                    "source": "C:\\Users\\Asus\\AndroidStudioProjects\\Project-Plaro-cpk (5)\\Project-Plaro-cpk\\android\\app\\src\\main\\res\\values-night\\styles.xml",
                     "from": {
                         "startLines": "3,14",
                         "startColumns": "4,4",
-                        "startOffsets": "172,817",
+                        "startOffsets": "175,831",
                         "endLines": "7,16",
                         "endColumns": "12,12",
-                        "endOffsets": "475,981"
+                        "endOffsets": "482,997"
                     },
                     "to": {
                         "startLines": "2,6",

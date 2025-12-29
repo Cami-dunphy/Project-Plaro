@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import '../Model/event.dart';
+import 'widgets/event_card.dart';
 import 'widgets/event_category_row.dart';
 import 'widgets/event_page_shimmer.dart';
 import 'widgets/filter_bottom_sheet.dart';
@@ -7,81 +9,113 @@ import 'package:plaro_3/ViewModel/event_provider.dart';
 import 'widgets/plaro_app_bar.dart';
 import 'dart:async';
 import 'create_events_page.dart';
+import 'event_search_page.dart';
 
 class AllEventsPage extends HookConsumerWidget {
   const AllEventsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    print('🏗️ Building AllEventsPage');
     final state = ref.watch(eventFeedProvider);
+    print(
+      '📊 EventFeedState - isLoading: ${state.isLoading}, error: ${state.error}, trendingEvents: ${state.trendingEvents.length}, hackathons: ${state.upcomingHackathons.length}, competitions: ${state.trendingCompetitions.length}',
+    );
     // Use ref.watch on the notifier to ensure rebuilds when filtered lists change
     final notifier = ref.watch(eventFeedProvider.notifier);
 
-    final searchQuery = state.searchQuery;
     final categories = [
       {'title': 'Trending', 'events': notifier.filteredTrendingEvents},
       {'title': 'Hackathons', 'events': notifier.filteredUpcomingHackathons},
-      {'title': 'Competitions', 'events': notifier.filteredTrendingCompetitions},
+      {
+        'title': 'Competitions',
+        'events': notifier.filteredTrendingCompetitions,
+      },
     ];
 
-    final hasResults = categories.any((cat) => (cat['events'] as List).isNotEmpty);
+    final hasResults = categories.any(
+      (cat) => (cat['events'] as List).isNotEmpty,
+    );
+    print('📋 Categories with results: $hasResults');
+    categories.forEach((cat) {
+      print('  - ${cat['title']}: ${(cat['events'] as List).length} events');
+    });
 
     return Scaffold(
       appBar: PlaroAppBar(
-        // This search and filter logic is already wired to the provider.
-        // As the user types or applies filters, the event list updates reactively.
-        onSearch: notifier.setSearchQuery,
+        onSearchSubmit: (query) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EventSearchPage(initialQuery: query),
+            ),
+          );
+        },
         onFilter: () async {
           final selectedFilters = await showModalBottomSheet(
             context: context,
-            builder: (_) => FilterBottomSheet(initialFilters: state.filterOptions),
+            builder:
+                (_) => FilterBottomSheet(initialFilters: state.filterOptions),
           );
           if (selectedFilters != null) {
             notifier.applyFilters(selectedFilters);
           }
         },
       ),
-      body: state.isLoading
-          ? const EventPageShimmer()
-          : state.error != null
-          ? Center(child: Text("Error: ${state.error}"))
-          : RefreshIndicator(
-        onRefresh: notifier.loadEvents,
-        child: hasResults
-            ? _AnimatedCategoryList(categories: categories, searchQuery: searchQuery)
-            : Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search_off, size: 64, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                'No events found',
-                style: TextStyle(fontSize: 20, color: Colors.grey[700], fontWeight: FontWeight.w600),
+      body:
+          state.isLoading
+              ? const EventPageShimmer()
+              : state.error != null
+              ? Center(child: Text("Error: ${state.error}"))
+              : RefreshIndicator(
+                onRefresh: notifier.loadEvents,
+                child:
+                    hasResults
+                        ? _AnimatedCategoryList(
+                          categories: categories,
+                          searchQuery: '',
+                        )
+                        : Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off,
+                                size: 64,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No events found',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.grey[700],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Try adjusting your search or filters.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Try adjusting your search or filters.',
-                style: TextStyle(fontSize: 16, color: Colors.grey[500]),
-              ),
-            ],
-          ),
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const CreateEventScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const CreateEventScreen()),
           );
         },
         backgroundColor: Colors.blueAccent,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-
     );
   }
 }
@@ -89,13 +123,17 @@ class AllEventsPage extends HookConsumerWidget {
 class _AnimatedCategoryList extends StatefulWidget {
   final List<Map<String, dynamic>> categories;
   final String searchQuery;
-  const _AnimatedCategoryList({required this.categories, required this.searchQuery});
+  const _AnimatedCategoryList({
+    required this.categories,
+    required this.searchQuery,
+  });
 
   @override
   State<_AnimatedCategoryList> createState() => _AnimatedCategoryListState();
 }
 
-class _AnimatedCategoryListState extends State<_AnimatedCategoryList> with TickerProviderStateMixin {
+class _AnimatedCategoryListState extends State<_AnimatedCategoryList>
+    with TickerProviderStateMixin {
   late final List<AnimationController> _controllers;
   late final List<Animation<double>> _fadeAnimations;
   late final List<Animation<Offset>> _slideAnimations;
@@ -109,12 +147,24 @@ class _AnimatedCategoryListState extends State<_AnimatedCategoryList> with Ticke
         duration: const Duration(milliseconds: 500),
       );
     });
-    _fadeAnimations = _controllers
-        .map((c) => Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: c, curve: Curves.easeIn)))
-        .toList();
-    _slideAnimations = _controllers
-        .map((c) => Tween<Offset>(begin: const Offset(0, 0.1), end: Offset.zero).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)))
-        .toList();
+    _fadeAnimations =
+        _controllers
+            .map(
+              (c) => Tween<double>(
+                begin: 0,
+                end: 1,
+              ).animate(CurvedAnimation(parent: c, curve: Curves.easeIn)),
+            )
+            .toList();
+    _slideAnimations =
+        _controllers
+            .map(
+              (c) => Tween<Offset>(
+                begin: const Offset(0, 0.1),
+                end: Offset.zero,
+              ).animate(CurvedAnimation(parent: c, curve: Curves.easeOut)),
+            )
+            .toList();
     _runStaggeredAnimations();
   }
 
@@ -142,17 +192,21 @@ class _AnimatedCategoryListState extends State<_AnimatedCategoryList> with Ticke
         final cat = widget.categories[i];
         return AnimatedBuilder(
           animation: _controllers[i],
-          builder: (context, child) => Opacity(
-            opacity: _fadeAnimations[i].value,
-            child: SlideTransition(
-              position: _slideAnimations[i],
-              child: child,
-            ),
+          builder:
+              (context, child) => Opacity(
+                opacity: _fadeAnimations[i].value,
+                child: SlideTransition(
+                  position: _slideAnimations[i],
+                  child: child,
+                ),
+              ),
+          child: EventCategoryRow(
+            title: cat['title'],
+            events: cat['events'],
+            searchQuery: widget.searchQuery,
           ),
-          child: EventCategoryRow(title: cat['title'], events: cat['events'], searchQuery: widget.searchQuery),
         );
       },
     );
-
   }
 }

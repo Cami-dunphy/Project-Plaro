@@ -1,4 +1,5 @@
 import 'package:image_picker/image_picker.dart';
+
 class Post_feed {
   String? post_id;
   String? user_id;
@@ -8,13 +9,13 @@ class Post_feed {
   String? caption;
   String? title;
   List<String>? tags;
-  DateTime? created_at;  // Changed from String? to DateTime?
+  DateTime? created_at; // Changed from String? to DateTime?
   int like_count;
   bool isliked;
   int comment_count;
-  int? share_count;  // Made nullable to match usage
+  int? share_count; // Made nullable to match usage
   List<Comment> commentsList;
-  List<String>? media_urls;  // Added missing media_urls property
+  List<String>? media_urls; // Added missing media_urls property
   List<XFile>? localMediaFiles;
 
   Post_feed({
@@ -32,7 +33,7 @@ class Post_feed {
     this.comment_count = 0,
     this.share_count = 0,
     required this.commentsList,
-    this.media_urls,  // Added media_urls parameter
+    this.media_urls, // Added media_urls parameter
     this.localMediaFiles,
   });
 
@@ -46,21 +47,24 @@ class Post_feed {
       caption: data['caption'],
       title: data['title'],
       tags: data['tags'] != null ? List<String>.from(data['tags']) : [],
-      created_at: data['created_at'] != null
-          ? DateTime.parse(data['created_at'])
-          : null,  // Parse string to DateTime
+      created_at:
+          data['created_at'] != null
+              ? DateTime.parse(data['created_at'])
+              : null, // Parse string to DateTime
       like_count: data['like_count'] ?? 0,
       comment_count: data['comment_count'] ?? 0,
       share_count: data['share_count'] ?? 0,
       isliked: data['isliked'] ?? false,
-      media_urls: data['media_urls'] != null
-          ? List<String>.from(data['media_urls'])
-          : null,  // Added media_urls parsing
-      commentsList: data['toast_comments'] != null
-          ? (data['toast_comments'] as List)
-          .map((comment) => Comment.fromMap(comment))
-          .toList()
-          : [],
+      media_urls:
+          data['media_urls'] != null
+              ? List<String>.from(data['media_urls'])
+              : null, // Added media_urls parsing
+      commentsList:
+          data['post_comments'] != null
+              ? (data['post_comments'] as List)
+                  .map((comment) => Comment.fromMap(comment))
+                  .toList()
+              : [],
     );
   }
 
@@ -74,7 +78,7 @@ class Post_feed {
       'caption': caption,
       'title': title,
       'tags': tags,
-      'created_at': created_at?.toIso8601String(),  // Convert DateTime to string
+      'created_at': created_at?.toIso8601String(), // Convert DateTime to string
       'like_count': like_count,
       'comment_count': comment_count,
       'share_count': share_count,
@@ -94,7 +98,7 @@ class Post_feed {
     String? caption,
     String? title,
     List<String>? tags,
-    DateTime? created_at,  // Changed to DateTime?
+    DateTime? created_at, // Changed to DateTime?
     int? like_count,
     bool? isliked,
     int? comment_count,
@@ -102,7 +106,6 @@ class Post_feed {
     List<Comment>? commentsList,
     List<String>? media_urls,
     List<XFile>? localMediaFiles,
-
   }) {
     return Post_feed(
       post_id: post_id ?? this.post_id,
@@ -159,7 +162,7 @@ class Post_feed {
   }
 
   void incrementShares() {
-    share_count = (share_count ?? 0) + 1;  // Handle nullable share_count
+    share_count = (share_count ?? 0) + 1; // Handle nullable share_count
   }
 }
 
@@ -207,10 +210,11 @@ class Comment {
       profileImage: map['profile_pic'] ?? 'assets/plaro_logo.png',
       content: map['content'] ?? '',
       likes: map['like_count'] ?? 0,
-      isliked: map['isliked'] ?? false,
-      createdAt: map['created_at'] != null
-          ? DateTime.parse(map['created_at'])
-          : DateTime.now(),
+      isliked: map['uliked'] ?? false,
+      createdAt:
+          map['created_at'] != null
+              ? DateTime.parse(map['created_at'])
+              : DateTime.now(),
     );
   }
 

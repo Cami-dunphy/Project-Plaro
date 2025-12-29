@@ -108,20 +108,44 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
 
       // Categorize events
       final now = DateTime.now();
-      final trending = allEvents.where((e) =>
-      e.startDate.isAfter(now) &&
-          e.startDate.difference(now).inDays <= 30
-      ).toList();
+      print('📅 Current time: $now');
 
-      final hackathons = allEvents.where((e) =>
-      e.category?.toLowerCase().contains('hackathon') == true ||
-          e.tags.any((tag) => tag.toLowerCase().contains('hackathon'))
-      ).toList();
+      final trending =
+          allEvents.where((e) {
+            bool isTrending =
+                e.startDate.isAfter(now) &&
+                e.startDate.difference(now).inDays <= 30;
+            print(
+              '📈 Event "${e.title}" trending: $isTrending (start: ${e.startDate}, diff: ${e.startDate.difference(now).inDays} days)',
+            );
+            return isTrending;
+          }).toList();
 
-      final competitions = allEvents.where((e) =>
-      e.category?.toLowerCase().contains('competition') == true ||
-          e.tags.any((tag) => tag.toLowerCase().contains('competition'))
-      ).toList();
+      final hackathons =
+          allEvents.where((e) {
+            bool isHackathon =
+                e.category?.toLowerCase().contains('hackathon') == true ||
+                e.tags.any((tag) => tag.toLowerCase().contains('hackathon'));
+            print(
+              '🏆 Event "${e.title}" hackathon: $isHackathon (category: ${e.category}, tags: ${e.tags})',
+            );
+            return isHackathon;
+          }).toList();
+
+      final competitions =
+          allEvents.where((e) {
+            bool isCompetition =
+                e.category?.toLowerCase().contains('competition') == true ||
+                e.tags.any((tag) => tag.toLowerCase().contains('competition'));
+            print(
+              '🏅 Event "${e.title}" competition: $isCompetition (category: ${e.category}, tags: ${e.tags})',
+            );
+            return isCompetition;
+          }).toList();
+
+      print(
+        '📊 Categorized events - Trending: ${trending.length}, Hackathons: ${hackathons.length}, Competitions: ${competitions.length}',
+      );
 
       state = state.copyWith(
         trendingEvents: trending,
@@ -129,7 +153,10 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
         trendingCompetitions: competitions,
         isLoading: false,
       );
+
+      print('✅ Events loaded successfully');
     } catch (e) {
+      print('❌ Error loading events: $e');
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
@@ -140,8 +167,9 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
     // Check if user is registered for this event
     bool isRegistered = false;
     if (userId != null && data['event_registrations'] != null) {
-      isRegistered = (data['event_registrations'] as List)
-          .any((reg) => reg['user_id'] == userId);
+      isRegistered = (data['event_registrations'] as List).any(
+        (reg) => reg['user_id'] == userId,
+      );
     }
 
     // Create tags from category
@@ -162,11 +190,18 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
       organizerId: data['organizer_id'] ?? '',
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      organizationName: data['user_profiles']?['username'] ?? 'Unknown Organizer',
+      organizationName:
+          data['user_profiles']?['username'] ?? 'Unknown Organizer',
       organizationLogo: data['user_profiles']?['profile_pic'] ?? '',
       tags: tags,
-      startDate: DateTime.parse(data['start_time']),
-      endDate: DateTime.parse(data['end_time']),
+      startDate:
+          data['start_time'] != null
+              ? DateTime.parse(data['start_time'])
+              : DateTime.now(),
+      endDate:
+          data['end_time'] != null
+              ? DateTime.parse(data['end_time'])
+              : DateTime.now().add(const Duration(hours: 1)),
       isTeamEvent: category.contains('team') || category.contains('hackathon'),
       minTeamSize: category.contains('hackathon') ? 2 : 1,
       maxTeamSize: category.contains('hackathon') ? 5 : 1,
@@ -176,9 +211,10 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
       longitude: 0.0,
       category: data['category'],
       location: data['location'],
-      registrationDeadline: data['registration_deadline'] != null
-          ? DateTime.parse(data['registration_deadline'])
-          : null,
+      registrationDeadline:
+          data['registration_deadline'] != null
+              ? DateTime.parse(data['registration_deadline'])
+              : null,
       bannerUrl: data['banner_url'],
     );
   }
@@ -197,50 +233,126 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
     // Apply search query
     if (state.searchQuery.isNotEmpty) {
       final q = state.searchQuery.toLowerCase();
-      filteredEvents = filteredEvents.where((e) =>
-      e.title.toLowerCase().contains(q) ||
-          e.description.toLowerCase().contains(q) ||
-          e.organizationName.toLowerCase().contains(q) ||
-          (e.category?.toLowerCase().contains(q) ?? false) ||
-          (e.location?.toLowerCase().contains(q) ?? false) ||
-          e.tags.any((tag) => tag.toLowerCase().contains(q))
-      ).toList();
+      filteredEvents =
+          filteredEvents
+              .where(
+                (e) =>
+                    e.title.toLowerCase().contains(q) ||
+                    e.description.toLowerCase().contains(q) ||
+                    e.organizationName.toLowerCase().contains(q) ||
+                    (e.category?.toLowerCase().contains(q) ?? false) ||
+                    (e.location?.toLowerCase().contains(q) ?? false) ||
+                    e.tags.any((tag) => tag.toLowerCase().contains(q)),
+              )
+              .toList();
     }
 
     // Apply filters from FilterOptions
     final filters = state.filterOptions;
     if (filters.eventTypes.isNotEmpty) {
-      filteredEvents = filteredEvents.where((e) {
-        return filters.eventTypes.any((type) =>
-        e.tags.any((tag) => tag.toLowerCase().contains(type.toLowerCase())) ||
-            (e.category?.toLowerCase().contains(type.toLowerCase()) ?? false)
-        );
-      }).toList();
+      filteredEvents =
+          filteredEvents.where((e) {
+            return filters.eventTypes.any(
+              (type) =>
+                  e.tags.any(
+                    (tag) => tag.toLowerCase().contains(type.toLowerCase()),
+                  ) ||
+                  (e.category?.toLowerCase().contains(type.toLowerCase()) ??
+                      false),
+            );
+          }).toList();
     }
 
     if (filters.teamSizes.isNotEmpty) {
-      filteredEvents = filteredEvents.where((e) {
-        if (filters.teamSizes.contains('Individual') && !e.isTeamEvent) {
-          return true;
+      filteredEvents =
+          filteredEvents.where((e) {
+            if (filters.teamSizes.contains('Individual') && !e.isTeamEvent) {
+              return true;
+            }
+            if (filters.teamSizes.contains('2-4 Members') &&
+                e.isTeamEvent &&
+                (e.minTeamSize ?? 0) >= 2 &&
+                (e.maxTeamSize ?? 0) <= 4) {
+              return true;
+            }
+            if (filters.teamSizes.contains('5+ Members') &&
+                e.isTeamEvent &&
+                (e.minTeamSize ?? 0) >= 5) {
+              return true;
+            }
+            return false;
+          }).toList();
+    }
+
+    // Date range filter
+    if (filters.startDate != null || filters.endDate != null) {
+      filteredEvents =
+          filteredEvents.where((e) {
+            bool matches = true;
+            if (filters.startDate != null) {
+              matches = matches && e.startDate.isAfter(filters.startDate!);
+            }
+            if (filters.endDate != null) {
+              matches = matches && e.endDate.isBefore(filters.endDate!);
+            }
+            return matches;
+          }).toList();
+    }
+
+    // Location filter
+    if (filters.location != null && filters.location!.isNotEmpty) {
+      final locationQuery = filters.location!.toLowerCase();
+      filteredEvents =
+          filteredEvents
+              .where(
+                (e) =>
+                    (e.location?.toLowerCase().contains(locationQuery) ??
+                        false),
+              )
+              .toList();
+    }
+
+    // Registration status filter
+    if (filters.isRegistered != null) {
+      filteredEvents =
+          filteredEvents
+              .where((e) => e.isRegistered == filters.isRegistered)
+              .toList();
+    }
+
+    // Event type filter (individual/team)
+    if (filters.isTeamEvent != null) {
+      filteredEvents =
+          filteredEvents
+              .where((e) => e.isTeamEvent == filters.isTeamEvent)
+              .toList();
+    }
+
+    // Sorting
+    if (filters.sortOrder != EventSortOrder.relevance) {
+      filteredEvents.sort((a, b) {
+        switch (filters.sortOrder) {
+          case EventSortOrder.date:
+            return a.startDate.compareTo(b.startDate);
+          case EventSortOrder.popularity:
+            // Assuming we have a popularity metric, for now sort by tags count or something
+            // Since we don't have it, maybe sort by tags count or registration status
+            return b.tags.length.compareTo(a.tags.length);
+          default:
+            return 0;
         }
-        if (filters.teamSizes.contains('2-4 Members') && e.isTeamEvent &&
-            (e.minTeamSize ?? 0) >= 2 && (e.maxTeamSize ?? 0) <= 4) {
-          return true;
-        }
-        if (filters.teamSizes.contains('5+ Members') && e.isTeamEvent &&
-            (e.minTeamSize ?? 0) >= 5) {
-          return true;
-        }
-        return false;
-      }).toList();
+      });
     }
 
     return filteredEvents;
   }
 
-  List<Event> get filteredTrendingEvents => _applyAllFilters(state.trendingEvents);
-  List<Event> get filteredUpcomingHackathons => _applyAllFilters(state.upcomingHackathons);
-  List<Event> get filteredTrendingCompetitions => _applyAllFilters(state.trendingCompetitions);
+  List<Event> get filteredTrendingEvents =>
+      _applyAllFilters(state.trendingEvents);
+  List<Event> get filteredUpcomingHackathons =>
+      _applyAllFilters(state.upcomingHackathons);
+  List<Event> get filteredTrendingCompetitions =>
+      _applyAllFilters(state.trendingCompetitions);
 
   Future<List<Event>> getEventsByCategory(String category) async {
     try {
@@ -341,7 +453,15 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
     }
   }
 
-  Future<bool> registerForEvent(String eventId) async {
+  Future<bool> registerForEvent(
+    String eventId, {
+    String? teamName,
+    String? teamDescription,
+    int? teamSize,
+    bool? lookingForMembers,
+    String? motivation,
+    String? experience,
+  }) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
       if (userId == null) {
@@ -349,12 +469,16 @@ class EventFeedNotifier extends StateNotifier<EventFeedState> {
         return false;
       }
 
-      await _supabase
-          .from('event_registrations')
-          .insert({
+      await _supabase.from('event_registrations').insert({
         'event_id': int.parse(eventId),
         'user_id': userId,
         'registered_at': DateTime.now().toIso8601String(),
+        'team_name': teamName,
+        'team_description': teamDescription,
+        'team_size': teamSize,
+        'looking_for_members': lookingForMembers,
+        'motivation': motivation,
+        'experience': experience,
       });
 
       // Refresh events to update registration status
@@ -409,8 +533,9 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
     // Check if user is registered for this event
     bool isRegistered = false;
     if (userId != null && data['event_registrations'] != null) {
-      isRegistered = (data['event_registrations'] as List)
-          .any((reg) => reg['user_id'] == userId);
+      isRegistered = (data['event_registrations'] as List).any(
+        (reg) => reg['user_id'] == userId,
+      );
     }
 
     // Create tags from category
@@ -431,11 +556,18 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       organizerId: data['organizer_id'] ?? '',
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      organizationName: data['user_profiles']?['username'] ?? 'Unknown Organizer',
+      organizationName:
+          data['user_profiles']?['username'] ?? 'Unknown Organizer',
       organizationLogo: data['user_profiles']?['profile_pic'] ?? '',
       tags: tags,
-      startDate: DateTime.parse(data['start_time']),
-      endDate: DateTime.parse(data['end_time']),
+      startDate:
+          data['start_time'] != null
+              ? DateTime.parse(data['start_time'])
+              : DateTime.now(),
+      endDate:
+          data['end_time'] != null
+              ? DateTime.parse(data['end_time'])
+              : DateTime.now().add(const Duration(hours: 1)),
       isTeamEvent: category.contains('team') || category.contains('hackathon'),
       minTeamSize: category.contains('hackathon') ? 2 : 1,
       maxTeamSize: category.contains('hackathon') ? 5 : 1,
@@ -445,9 +577,10 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       longitude: 0.0,
       category: data['category'],
       location: data['location'],
-      registrationDeadline: data['registration_deadline'] != null
-          ? DateTime.parse(data['registration_deadline'])
-          : null,
+      registrationDeadline:
+          data['registration_deadline'] != null
+              ? DateTime.parse(data['registration_deadline'])
+              : null,
       bannerUrl: data['banner_url'],
     );
   }
@@ -456,12 +589,11 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
     try {
       state = state.copyWith(isUploading: true, uploadProgress: 0.0);
 
-      final fileName = 'event_banners/${eventId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'event_banners/${eventId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
 
       // Upload to Supabase Storage
-      await _supabase.storage
-          .from('event-banners')
-          .upload(fileName, imageFile);
+      await _supabase.storage.from('event-banners').upload(fileName, imageFile);
 
       // Simulate progress updates
       for (double progress = 0.2; progress <= 1.0; progress += 0.2) {
@@ -477,7 +609,10 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       state = state.copyWith(isUploading: false, uploadProgress: 1.0);
       return publicUrl;
     } catch (e) {
-      state = state.copyWith(isUploading: false, error: 'Failed to upload banner: ${e.toString()}');
+      state = state.copyWith(
+        isUploading: false,
+        error: 'Failed to upload banner: ${e.toString()}',
+      );
       return null;
     }
   }
@@ -503,23 +638,25 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       }
 
       // Insert event with proper field mapping
-      final eventResponse = await _supabase
-          .from('events')
-          .insert({
-        'organizer_id': userId,
-        'title': title,
-        'description': description,
-        'category': category,
-        'location': location,
-        'start_time': startTime.toIso8601String(),
-        'end_time': endTime.toIso8601String(),
-        'registration_deadline': registrationDeadline?.toIso8601String(),
-        'banner_url': null, // Will be updated if banner is uploaded
-        'created_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      })
-          .select('event_id')
-          .single();
+      final eventResponse =
+          await _supabase
+              .from('events')
+              .insert({
+                'organizer_id': userId,
+                'title': title,
+                'description': description,
+                'category': category,
+                'location': location,
+                'start_time': startTime.toIso8601String(),
+                'end_time': endTime.toIso8601String(),
+                'registration_deadline':
+                    registrationDeadline?.toIso8601String(),
+                'banner_url': null, // Will be updated if banner is uploaded
+                'created_at': DateTime.now().toIso8601String(),
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .select('event_id')
+              .single();
 
       final eventId = eventResponse['event_id'].toString();
 
@@ -532,9 +669,9 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
           await _supabase
               .from('events')
               .update({
-            'banner_url': bannerUrl,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
+                'banner_url': bannerUrl,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
               .eq('event_id', eventId);
         }
       }
@@ -543,9 +680,7 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       if (contactName?.isNotEmpty == true ||
           contactEmail?.isNotEmpty == true ||
           contactPhone?.isNotEmpty == true) {
-        await _supabase
-            .from('event_contacts')
-            .insert({
+        await _supabase.from('event_contacts').insert({
           'event_id': int.parse(eventId),
           'name': contactName ?? '',
           'email': contactEmail ?? '',
@@ -577,24 +712,24 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       }
 
       // Check if user owns this event
-      final eventCheck = await _supabase
-          .from('events')
-          .select('organizer_id')
-          .eq('event_id', int.parse(eventId))
-          .single();
+      final eventCheck =
+          await _supabase
+              .from('events')
+              .select('organizer_id')
+              .eq('event_id', int.parse(eventId))
+              .single();
 
       if (eventCheck['organizer_id'] != userId) {
         throw Exception('Unauthorized: You can only update your own events');
       }
 
       // Update event in event_updates table (if that's the intended behavior)
-      await _supabase
-          .from('event_updates')
-          .insert({
+      await _supabase.from('event_updates').insert({
         'event_id': int.parse(eventId),
         'title': title,
         'content': content,
-        'created_at': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
+        'created_at':
+            createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
       });
 
       state = state.copyWith(isLoading: false);
@@ -615,11 +750,12 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       }
 
       // Check if user owns this event
-      final eventCheck = await _supabase
-          .from('events')
-          .select('organizer_id, banner_url')
-          .eq('event_id', int.parse(eventId))
-          .single();
+      final eventCheck =
+          await _supabase
+              .from('events')
+              .select('organizer_id, banner_url')
+              .eq('event_id', int.parse(eventId))
+              .single();
 
       if (eventCheck['organizer_id'] != userId) {
         throw Exception('Unauthorized: You can only delete your own events');
@@ -629,9 +765,9 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
       if (eventCheck['banner_url'] != null) {
         try {
           final fileName = eventCheck['banner_url'].split('/').last;
-          await _supabase.storage
-              .from('event-banners')
-              .remove(['event_banners/$fileName']);
+          await _supabase.storage.from('event-banners').remove([
+            'event_banners/$fileName',
+          ]);
         } catch (e) {
           // Continue even if image deletion fails
           print('Failed to delete banner image: $e');
@@ -670,9 +806,10 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
 
   Future<Event?> getEventById(String eventId) async {
     try {
-      final response = await _supabase
-          .from('events')
-          .select('''
+      final response =
+          await _supabase
+              .from('events')
+              .select('''
             *,
             user_profiles!organizer_id (
               username,
@@ -682,8 +819,8 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
               user_id
             )
           ''')
-          .eq('event_id', int.parse(eventId))
-          .single();
+              .eq('event_id', int.parse(eventId))
+              .single();
 
       return _mapEventFromDatabase(response);
     } catch (e) {
@@ -736,15 +873,17 @@ class EventCreateNotifier extends StateNotifier<EventCreateState> {
 }
 
 // Providers
-final eventFeedProvider = StateNotifierProvider<EventFeedNotifier, EventFeedState>((ref) {
-  final notifier = EventFeedNotifier();
-  notifier.loadEvents();
-  return notifier;
-});
+final eventFeedProvider =
+    StateNotifierProvider<EventFeedNotifier, EventFeedState>((ref) {
+      final notifier = EventFeedNotifier();
+      notifier.loadEvents();
+      return notifier;
+    });
 
-final eventCreateProvider = StateNotifierProvider<EventCreateNotifier, EventCreateState>((ref) {
-  return EventCreateNotifier();
-});
+final eventCreateProvider =
+    StateNotifierProvider<EventCreateNotifier, EventCreateState>((ref) {
+      return EventCreateNotifier();
+    });
 
 // Additional utility providers
 final eventCategoriesProvider = FutureProvider<List<String>>((ref) async {
@@ -771,43 +910,56 @@ final eventCategoriesProvider = FutureProvider<List<String>>((ref) async {
       'Hackathon',
       'Competition',
       'Workshop',
-      'Other'
+      'Other',
     ];
   }
 });
 
-final userEventsProvider = FutureProvider<Map<String, List<Event>>>((ref) async {
+final userEventsProvider = FutureProvider<Map<String, List<Event>>>((
+  ref,
+) async {
   final notifier = ref.read(eventFeedProvider.notifier);
 
   final createdEvents = await notifier.getUserCreatedEvents();
   final registeredEvents = await notifier.getUserRegisteredEvents();
 
-  return {
-    'created': createdEvents,
-    'registered': registeredEvents,
-  };
+  return {'created': createdEvents, 'registered': registeredEvents};
 });
 
 // Provider for getting a specific event by ID
-final eventByIdProvider = FutureProvider.family<Event?, String>((ref, eventId) async {
+final eventByIdProvider = FutureProvider.family<Event?, String>((
+  ref,
+  eventId,
+) async {
   final notifier = ref.read(eventCreateProvider.notifier);
   return await notifier.getEventById(eventId);
 });
 
 // Provider for getting event updates
-final eventUpdatesProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, eventId) async {
-  final notifier = ref.read(eventCreateProvider.notifier);
-  return await notifier.getEventUpdates(eventId);
-});
+final eventUpdatesProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      eventId,
+    ) async {
+      final notifier = ref.read(eventCreateProvider.notifier);
+      return await notifier.getEventUpdates(eventId);
+    });
 
 // Provider for getting event contacts
-final eventContactsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, eventId) async {
-  final notifier = ref.read(eventCreateProvider.notifier);
-  return await notifier.getEventContacts(eventId);
-});
+final eventContactsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      eventId,
+    ) async {
+      final notifier = ref.read(eventCreateProvider.notifier);
+      return await notifier.getEventContacts(eventId);
+    });
 
 // Provider for getting event registration count
-final eventRegistrationCountProvider = FutureProvider.family<int, String>((ref, eventId) async {
+final eventRegistrationCountProvider = FutureProvider.family<int, String>((
+  ref,
+  eventId,
+) async {
   final notifier = ref.read(eventCreateProvider.notifier);
   return await notifier.getEventRegistrationCount(eventId);
 });

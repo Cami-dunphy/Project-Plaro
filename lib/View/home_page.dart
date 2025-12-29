@@ -11,6 +11,7 @@ import 'widgets/post_card.dart';
 import 'search_page.dart';
 import '../ViewModel/theme_provider.dart';
 import 'allevents_page.dart';
+import 'dummy_events_page.dart';
 import 'profile.dart';
 import '../ViewModel/user_provider.dart';
 
@@ -201,11 +202,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         timestamp = DateTime.now();
       }
 
-      combinedFeed.add({
-        'type': 'post',
-        'data': post,
-        'timestamp': timestamp,
-      });
+      combinedFeed.add({'type': 'post', 'data': post, 'timestamp': timestamp});
     }
 
     // Sort by timestamp (newest first)
@@ -253,7 +250,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const SearchScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const SearchScreen(),
+                      ),
                     );
                   },
                   icon: Icon(
@@ -298,30 +297,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Center(
                       child: Consumer(
                         builder: (context, ref, child) {
-                          final currentUserProfile = ref.watch(currentUserProfileProvider);
+                          final currentUserProfile = ref.watch(
+                            currentUserProfileProvider,
+                          );
                           return currentUserProfile.when(
-                            data: (profile) => CircleAvatar(
-                              backgroundImage: profile?.profilePic != null
-                                  ? NetworkImage(profile!.profilePic!)
-                                  : const AssetImage('assets/plaro_logo.png') as ImageProvider,
-                              radius: 40.0,
-                            ),
-                            loading: () => const CircleAvatar(
-                              radius: 40.0,
-                              backgroundColor: Colors.grey,
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            data:
+                                (profile) => CircleAvatar(
+                                  backgroundImage:
+                                      profile?.profilePic != null
+                                          ? NetworkImage(profile!.profilePic!)
+                                          : const AssetImage(
+                                                'assets/plaro_logo.png',
+                                              )
+                                              as ImageProvider,
+                                  radius: 40.0,
                                 ),
-                              ),
-                            ),
-                            error: (error, stack) => const CircleAvatar(
-                              backgroundImage: AssetImage('assets/plaro_logo.png'),
-                              radius: 40.0,
-                            ),
+                            loading:
+                                () => const CircleAvatar(
+                                  radius: 40.0,
+                                  backgroundColor: Colors.grey,
+                                  child: SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            error:
+                                (error, stack) => const CircleAvatar(
+                                  backgroundImage: AssetImage(
+                                    'assets/plaro_logo.png',
+                                  ),
+                                  radius: 40.0,
+                                ),
                           );
                         },
                       ),
@@ -331,40 +343,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Consumer(
                         builder: (context, ref, child) {
                           final authState = ref.watch(authStateProvider);
-                          final currentUserProfile = ref.watch(currentUserProfileProvider);
+                          final currentUserProfile = ref.watch(
+                            currentUserProfileProvider,
+                          );
 
                           return authState.when(
                             data: (session) {
                               return currentUserProfile.when(
-                                data: (profile) => Text(
-                                  profile?.username ?? session?.user.email ?? 'No user',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  textAlign: TextAlign.center,
-                                ),
-                                loading: () => const Text(
+                                data:
+                                    (profile) => Text(
+                                      profile?.username ??
+                                          session?.user.email ??
+                                          'No user',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                loading:
+                                    () => const Text(
+                                      'Loading...',
+                                      style: TextStyle(color: Colors.white70),
+                                    ),
+                                error:
+                                    (error, stack) => Text(
+                                      session?.user.email ??
+                                          'Error loading user',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                              );
+                            },
+                            loading:
+                                () => const Text(
                                   'Loading...',
                                   style: TextStyle(color: Colors.white70),
                                 ),
-                                error: (error, stack) => Text(
-                                  session?.user.email ?? 'Error loading user',
-                                  style: const TextStyle(color: Colors.white),
-                                  textAlign: TextAlign.center,
+                            error:
+                                (error, stack) => const Text(
+                                  'Error loading user',
+                                  style: TextStyle(color: Colors.white),
                                 ),
-                              );
-                            },
-                            loading: () => const Text(
-                              'Loading...',
-                              style: TextStyle(color: Colors.white70),
-                            ),
-                            error: (error, stack) => const Text(
-                              'Error loading user',
-                              style: TextStyle(color: Colors.white),
-                            ),
                           );
                         },
                       ),
@@ -388,7 +412,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const AllEventsPage()),
+                    MaterialPageRoute(
+                      builder: (context) => const DummyEventsPage(),
+                    ),
                   );
                 },
               ),
@@ -412,7 +438,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               //     );
               //   },
               // ),
-
               ListTile(
                 leading: Icon(
                   Icons.settings,
@@ -443,7 +468,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ref.read(themeNotifierProvider.notifier).toggleTheme(value);
                 },
                 secondary: Icon(
-                  themeMode == ThemeMode.dark ? Icons.dark_mode : Icons.light_mode,
+                  themeMode == ThemeMode.dark
+                      ? Icons.dark_mode
+                      : Icons.light_mode,
                   color: Theme.of(context).iconTheme.color,
                 ),
                 activeColor: Theme.of(context).colorScheme.primary,
@@ -453,21 +480,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // Sign Out
               ListTile(
-                leading: _isLoading
-                    ? SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).iconTheme.color ?? Colors.grey,
-                    ),
-                  ),
-                )
-                    : Icon(
-                  Icons.logout,
-                  color: Theme.of(context).iconTheme.color,
-                ),
+                leading:
+                    _isLoading
+                        ? SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).iconTheme.color ?? Colors.grey,
+                            ),
+                          ),
+                        )
+                        : Icon(
+                          Icons.logout,
+                          color: Theme.of(context).iconTheme.color,
+                        ),
                 title: Text(
                   _isLoading ? 'Signing out...' : 'Sign Out',
                   style: TextStyle(
@@ -480,7 +508,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-
 
       body: authState.when(
         data: (session) {
@@ -505,36 +532,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
           return _buildCombinedFeed(toastFeedState, postFeedState);
         },
-        loading: () => const Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
-          ),
-        ),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                color: Colors.red,
-                size: 48,
+        loading:
+            () => const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white54),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Error: $error',
-                style: const TextStyle(color: Colors.red, fontSize: 16),
-                textAlign: TextAlign.center,
+            ),
+        error:
+            (error, stack) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error: $error',
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
       ),
     );
   }
 
   Widget _buildCombinedFeed(dynamic toastFeedState, dynamic postFeedState) {
     final combinedFeed = _getCombinedFeed(toastFeedState, postFeedState);
-    final hasError = toastFeedState.error != null || postFeedState.error != null;
+    final hasError =
+        toastFeedState.error != null || postFeedState.error != null;
     final isLoading = toastFeedState.isLoading || postFeedState.isLoading;
     final isEmpty = combinedFeed.isEmpty;
 
@@ -563,7 +589,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        toastFeedState.error ?? postFeedState.error ?? 'Unknown error',
+                        toastFeedState.error ??
+                            postFeedState.error ??
+                            'Unknown error',
                         style: const TextStyle(color: Colors.red),
                       ),
                     ),
@@ -587,46 +615,47 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // Combined feed list
           if (combinedFeed.isNotEmpty)
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  final feedItem = combinedFeed[index];
-                  final type = feedItem['type'] as String;
-                  final data = feedItem['data'];
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final feedItem = combinedFeed[index];
+                final type = feedItem['type'] as String;
+                final data = feedItem['data'];
 
-                  if (type == 'toast') {
-                    return ToastCard(
-                      toast: data,
-                      onTap: () {
-                      },
-                      onUserInfo: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => OtherProfileScreen(
-                              userId: data.user_id, // Pass the user ID
-                              //initialUserData: null, // Pass initial data to avoid loading delay
-                            ),
-                            )
-                        );
-                      },
-                    );
-                  } else {
-                    return PostCard(
-                      post: data,
-                      onTap: () {
-                      },
-                      onUserInfo: () {
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (context) => OtherProfileScreen(
-                              userId: data.user_id, // Pass the user ID
-                              //initialUserData: null, // Pass initial data to avoid loading delay
-                            ),
-                            )
-                        );
-                      },
-                    );
-                  }
-                },
-                childCount: combinedFeed.length,
-              ),
+                if (type == 'toast') {
+                  return ToastCard(
+                    toast: data,
+                    onTap: () {},
+                    onUserInfo: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => OtherProfileScreen(
+                                userId: data.user_id, // Pass the user ID
+                                //initialUserData: null, // Pass initial data to avoid loading delay
+                              ),
+                        ),
+                      );
+                    },
+                  );
+                } else {
+                  return PostCard(
+                    post: data,
+                    onTap: () {},
+                    onUserInfo: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => OtherProfileScreen(
+                                userId: data.user_id, // Pass the user ID
+                                //initialUserData: null, // Pass initial data to avoid loading delay
+                              ),
+                        ),
+                      );
+                    },
+                  );
+                }
+              }, childCount: combinedFeed.length),
             ),
 
           // Loading and empty states
@@ -651,7 +680,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  Widget _buildEmptyOrLoadingState(bool isEmpty, bool isLoading, bool hasError) {
+  Widget _buildEmptyOrLoadingState(
+    bool isEmpty,
+    bool isLoading,
+    bool hasError,
+  ) {
     if (isEmpty && isLoading) {
       return const SliverFillRemaining(
         child: Center(
@@ -668,11 +701,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.article_outlined,
-                size: 64,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.article_outlined, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
               const Text(
                 'No posts yet',
@@ -685,10 +714,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: 8),
               const Text(
                 'Be the first to share something!',
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 24),
               ElevatedButton(

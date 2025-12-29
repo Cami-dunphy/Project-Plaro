@@ -22,6 +22,10 @@ class Event {
   final String? location;
   final DateTime? registrationDeadline;
   final String? bannerUrl;
+  final int? registeredCount;
+  final String? contactEmail;
+  final String? contactPhone;
+  final List<String>? prizes;
 
   Event({
     required this.eventId,
@@ -44,6 +48,10 @@ class Event {
     this.category,
     this.location,
     this.registrationDeadline,
+    this.registeredCount,
+    this.contactEmail,
+    this.contactPhone,
+    this.prizes,
   });
 
   // Updated factory constructor to match database schema
@@ -67,29 +75,51 @@ class Event {
       title: map['title'] ?? '',
       description: map['description'] ?? '',
       // Map from joined user_profiles table
-      organizationName: map['user_profiles']?['username'] ?? map['organization_name'] ?? 'Unknown Organizer',
-      organizationLogo: map['user_profiles']?['profile_pic'] ?? map['organization_logo'] ?? '',
+      organizationName:
+          map['user_profiles']?['username'] ??
+          map['organization_name'] ??
+          'Unknown Organizer',
+      organizationLogo:
+          map['user_profiles']?['profile_pic'] ??
+          map['organization_logo'] ??
+          '',
       tags: tags,
       // Map database time fields to model date fields
-      startDate: map['start_time'] != null ? DateTime.parse(map['start_time']) : DateTime.now(),
-      endDate: map['end_time'] != null ? DateTime.parse(map['end_time']) : DateTime.now(),
-      isTeamEvent: map['is_team_event'] ?? (category.contains('team') || category.contains('hackathon')),
-      minTeamSize: map['min_team_size'] ?? (category.contains('hackathon') ? 2 : 1),
-      maxTeamSize: map['max_team_size'] ?? (category.contains('hackathon') ? 5 : 1),
+      startDate:
+          map['start_time'] != null
+              ? DateTime.parse(map['start_time'])
+              : DateTime.now(),
+      endDate:
+          map['end_time'] != null
+              ? DateTime.parse(map['end_time'])
+              : DateTime.now(),
+      isTeamEvent:
+          map['is_team_event'] ??
+          (category.contains('team') || category.contains('hackathon')),
+      minTeamSize:
+          map['min_team_size'] ?? (category.contains('hackathon') ? 2 : 1),
+      maxTeamSize:
+          map['max_team_size'] ?? (category.contains('hackathon') ? 5 : 1),
       isRegistered: map['is_registered'] ?? false,
-      challenges: map['challenges'] != null
-          ? (map['challenges'] as List)
-          .map((e) => Challenge.fromMap(e))
-          .toList()
-          : [],
+      challenges:
+          map['challenges'] != null
+              ? (map['challenges'] as List)
+                  .map((e) => Challenge.fromMap(e))
+                  .toList()
+              : [],
       latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
       category: map['category'],
       location: map['location'],
-      registrationDeadline: map['registration_deadline'] != null
-          ? DateTime.parse(map['registration_deadline'])
-          : null,
+      registrationDeadline:
+          map['registration_deadline'] != null
+              ? DateTime.parse(map['registration_deadline'])
+              : null,
       bannerUrl: map['banner_url'],
+      registeredCount: map['registered_count'],
+      contactEmail: map['contact_email'],
+      contactPhone: map['contact_phone'],
+      prizes: map['prizes'] != null ? List<String>.from(map['prizes']) : null,
     );
   }
 
@@ -118,18 +148,23 @@ class Event {
       'challenges': challenges.map((e) => e.toMap()).toList(),
       'latitude': latitude,
       'longitude': longitude,
+      'prizes': prizes,
     };
   }
 
   // Factory constructor specifically for database results with joins
-  factory Event.fromDatabaseJoin(Map<String, dynamic> data, {bool? isRegistered}) {
+  factory Event.fromDatabaseJoin(
+    Map<String, dynamic> data, {
+    bool? isRegistered,
+  }) {
     // Handle user registration status
     bool registered = isRegistered ?? false;
     if (!registered && data['event_registrations'] != null) {
       final userId = Supabase.instance.client.auth.currentUser?.id;
       if (userId != null) {
-        registered = (data['event_registrations'] as List)
-            .any((reg) => reg['user_id'] == userId);
+        registered = (data['event_registrations'] as List).any(
+          (reg) => reg['user_id'] == userId,
+        );
       }
     }
 
@@ -150,7 +185,8 @@ class Event {
       organizerId: data['organizer_id'] ?? '',
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      organizationName: data['user_profiles']?['username'] ?? 'Unknown Organizer',
+      organizationName:
+          data['user_profiles']?['username'] ?? 'Unknown Organizer',
       organizationLogo: data['user_profiles']?['profile_pic'] ?? '',
       tags: tags,
       startDate: DateTime.parse(data['start_time']),
@@ -164,10 +200,13 @@ class Event {
       longitude: 0.0,
       category: data['category'],
       location: data['location'],
-      registrationDeadline: data['registration_deadline'] != null
-          ? DateTime.parse(data['registration_deadline'])
-          : null,
+      registrationDeadline:
+          data['registration_deadline'] != null
+              ? DateTime.parse(data['registration_deadline'])
+              : null,
       bannerUrl: data['banner_url'],
+      registeredCount: data['registered_count'],
+      prizes: data['prizes'] != null ? List<String>.from(data['prizes']) : null,
     );
   }
 

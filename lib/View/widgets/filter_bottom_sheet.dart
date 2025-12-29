@@ -4,10 +4,7 @@ import '../../Model/filter_options.dart';
 class FilterBottomSheet extends StatefulWidget {
   final FilterOptions initialFilters;
 
-  const FilterBottomSheet({
-    super.key,
-    required this.initialFilters,
-  });
+  const FilterBottomSheet({super.key, required this.initialFilters});
 
   @override
   FilterBottomSheetState createState() => FilterBottomSheetState();
@@ -16,8 +13,29 @@ class FilterBottomSheet extends StatefulWidget {
 class FilterBottomSheetState extends State<FilterBottomSheet> {
   late FilterOptions _currentFilters;
 
-  final List<String> _allEventTypes = ['Hackathon', 'Competition', 'Internship', 'Workshop'];
-  final List<String> _allTeamSizes = ['Individual', '2-4 Members', '5+ Members'];
+  final List<String> _allEventTypes = [
+    'Hackathon',
+    'Competition',
+    'Workshop',
+    'Career Fair',
+    'Internship',
+    'Jobs',
+    'Networking',
+  ];
+  final List<String> _allTeamSizes = [
+    'Individual',
+    '2-4 Members',
+    '5+ Members',
+  ];
+
+  final List<String> _sortOptions = ['Relevance', 'Date', 'Popularity'];
+
+  final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _startDateController = TextEditingController();
+  final TextEditingController _endDateController = TextEditingController();
+
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   @override
   void initState() {
@@ -79,6 +97,7 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
                 });
               },
             ),
+            _buildSortSection(context),
             // More filter sections can be added here
             const SizedBox(height: 24),
             Row(
@@ -111,12 +130,12 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
   }
 
   Widget _buildFilterSection(
-      BuildContext context, {
-        required String title,
-        required List<String> options,
-        required Set<String> selectedOptions,
-        required ValueChanged<String> onSelected,
-      }) {
+    BuildContext context, {
+    required String title,
+    required List<String> options,
+    required Set<String> selectedOptions,
+    required ValueChanged<String> onSelected,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -125,19 +144,81 @@ class FilterBottomSheetState extends State<FilterBottomSheet> {
         Wrap(
           spacing: 8.0,
           runSpacing: 4.0,
-          children: options.map((option) {
-            final isSelected = selectedOptions.contains(option);
-            return FilterChip(
-              label: Text(option),
-              selected: isSelected,
-              onSelected: (selected) => onSelected(option),
-              selectedColor: Theme.of(context).colorScheme.primaryContainer,
-              checkmarkColor: Theme.of(context).colorScheme.onPrimaryContainer,
-            );
-          }).toList(),
+          children:
+              options.map((option) {
+                final isSelected = selectedOptions.contains(option);
+                return FilterChip(
+                  label: Text(option),
+                  selected: isSelected,
+                  onSelected: (selected) => onSelected(option),
+                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                  checkmarkColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
+                );
+              }).toList(),
         ),
         const SizedBox(height: 16),
       ],
     );
+  }
+
+  Widget _buildSortSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Sort By', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 4.0,
+          children:
+              _sortOptions.map((option) {
+                final isSelected =
+                    _getSortOrderString(_currentFilters.sortOrder) == option;
+                return FilterChip(
+                  label: Text(option),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() {
+                        _currentFilters = _currentFilters.copyWith(
+                          sortOrder: _getSortOrderFromString(option),
+                        );
+                      });
+                    }
+                  },
+                  selectedColor: Theme.of(context).colorScheme.primaryContainer,
+                  checkmarkColor:
+                      Theme.of(context).colorScheme.onPrimaryContainer,
+                );
+              }).toList(),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  String _getSortOrderString(EventSortOrder sortOrder) {
+    switch (sortOrder) {
+      case EventSortOrder.relevance:
+        return 'Relevance';
+      case EventSortOrder.date:
+        return 'Date';
+      case EventSortOrder.popularity:
+        return 'Popularity';
+    }
+  }
+
+  EventSortOrder _getSortOrderFromString(String option) {
+    switch (option) {
+      case 'Relevance':
+        return EventSortOrder.relevance;
+      case 'Date':
+        return EventSortOrder.date;
+      case 'Popularity':
+        return EventSortOrder.popularity;
+      default:
+        return EventSortOrder.relevance;
+    }
   }
 }
